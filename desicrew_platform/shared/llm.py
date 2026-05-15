@@ -33,18 +33,18 @@ def get_llm() -> ChatOpenAI:
         except FileNotFoundError:
             pass
             
-    if openrouter_key:
+    if openai_key:
+        return ChatOpenAI(
+            openai_api_key=openai_key,
+            model_name="gpt-4o-mini",
+            temperature=0.0
+        )
+    elif openrouter_key:
         return ChatOpenAI(
             openai_api_base="https://openrouter.ai/api/v1",
             openai_api_key=openrouter_key,
             model_name="mistralai/mistral-7b-instruct",
             temperature=0.0
         )
-    elif openai_key:
-        return ChatOpenAI(
-            openai_api_key=openai_key,
-            model_name="gpt-4o-mini",
-            temperature=0.0
-        )
     else:
-        raise ValueError("Neither OPENROUTER_API_KEY nor OPENAI_API_KEY is set in environment or Streamlit secrets.")
+        raise ValueError("Neither OPENAI_API_KEY nor OPENROUTER_API_KEY is set in environment or Streamlit secrets.")
