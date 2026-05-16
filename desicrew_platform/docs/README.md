@@ -38,3 +38,12 @@ This is a Streamlit application designed to act as an automated data analyst.
   - Automatically loads the data into a Pandas dataframe.
   - Exposes a chat interface where you can ask analytical questions in plain English.
   - Writes and executes underlying Pandas code (which you can preview!) to deliver the answers.
+
+## Task 2 — Document Support Assistant
+A RAG-based assistant for querying policy documents.
+- **How to run**: `streamlit run desicrew_platform/task2_rag_assistant/app.py`
+- **What it does**:
+  - Ingests PDF, DOCX, and TXT files.
+  - Uses MMR retrieval for diverse context.
+  - Features semantic topic switching to clear context when moving between unrelated questions.
+  - Provides full source citations (file name and page number).
