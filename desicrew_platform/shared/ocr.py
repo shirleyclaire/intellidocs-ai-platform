@@ -12,7 +12,8 @@ def _get_paddle():
     global _PADDLE_INSTANCE
     if _PADDLE_INSTANCE is None:
         from paddleocr import PaddleOCR
-        _PADDLE_INSTANCE = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+        # Disabling 'use_angle_cls' and 'enable_mkldnn' to avoid PIR/oneDNN bugs in Paddle 3.3.1 on Windows
+        _PADDLE_INSTANCE = PaddleOCR(use_angle_cls=False, lang='en', enable_mkldnn=False)
     return _PADDLE_INSTANCE
 
 def run_tesseract(image: np.ndarray, psm: int = 6) -> Dict[str, Any]:
@@ -73,7 +74,7 @@ def run_paddle(image: np.ndarray) -> Dict[str, Any]:
     """
     try:
         ocr = _get_paddle()
-        result = ocr.ocr(image, cls=True)
+        result = ocr.ocr(image)
         
         lines = []
         confs = []
@@ -93,7 +94,10 @@ def run_paddle(image: np.ndarray) -> Dict[str, Any]:
             "confidence": confidence,
             "engine": "paddle"
         }
-    except Exception:
+    except Exception as e:
+        print(f"PaddleOCR Error: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "text": "",
             "confidence": 0.0,

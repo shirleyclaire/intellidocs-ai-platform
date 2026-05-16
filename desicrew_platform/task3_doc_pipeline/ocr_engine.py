@@ -1,35 +1,37 @@
 import cv2
-import fitz # PyMuPDF
 import numpy as np
-from typing import List
+import pytesseract
+from PIL import Image
+from typing import List, Dict, Any
+from shared.ocr import run_tesseract, run_paddle
 
-def pdf_to_images(pdf_path: str, dpi: int = 300) -> List[np.ndarray]:
-    """
-    Open a PDF and render each page as a numpy array in RGB format.
-    """
-    images = []
-    doc = fitz.open(pdf_path)
+# def pdf_to_images(pdf_path: str, dpi: int = 300) -> List[np.ndarray]:
+#     """
+#     Open a PDF and render each page as a numpy array in RGB format.
+#     """
+#     images = []
+
     
-    # Calculate scale factor for DPI
-    # Default DPI in fitz is 72, so scale = dpi / 72
-    zoom = dpi / 72
-    mat = fitz.Matrix(zoom, zoom)
+#     # Calculate scale factor for DPI
+#     # Default DPI in fitz is 72, so scale = dpi / 72
+#     zoom = dpi / 72
+#     mat = fitz.Matrix(zoom, zoom)
     
-    for page in doc:
-        pix = page.get_pixmap(matrix=mat)
-        # Convert pixmap to numpy array
-        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+#     for page in doc:
+#         pix = page.get_pixmap(matrix=mat)
+#         # Convert pixmap to numpy array
+#         img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
         
-        # Ensure it is RGB (3 channels)
-        if pix.n == 1: # Grayscale
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        elif pix.n == 4: # RGBA
-            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+#         # Ensure it is RGB (3 channels)
+#         if pix.n == 1: # Grayscale
+#             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+#         elif pix.n == 4: # RGBA
+#             img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
             
-        images.append(img)
+#         images.append(img)
         
-    doc.close()
-    return images
+#     doc.close()
+#     return images
 
 def deskew(image: np.ndarray) -> np.ndarray:
     """
@@ -83,7 +85,7 @@ def denoise(image: np.ndarray) -> np.ndarray:
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     
-    return cv2.fastNlMeansDenoising(image, h=10)
+    return cv2.fastNlMeansDenoising(image, h=3) # changed h=10 to h=3
 
 def binarise(image: np.ndarray) -> np.ndarray:
     """
@@ -110,7 +112,8 @@ def preprocess(image: np.ndarray) -> np.ndarray:
         gray = image.copy()
         
     # 2. Deskew
-    deskewed = deskew(gray)
+    # deskewed = deskew(gray)
+    deskewed = gray 
     
     # 3. Denoise
     denoised = denoise(deskewed)
@@ -119,3 +122,87 @@ def preprocess(image: np.ndarray) -> np.ndarray:
     binary = binarise(denoised)
     
     return binary
+
+def get_tesseract_confidence(image: np.ndarray) -> float:
+    """
+    Calculate the mean confidence of Tesseract OCR on the given image.
+    Returns 0.0 - 1.0.
+    """
+    # Convert numpy array to PIL Image
+    pil_img = Image.fromarray(image)
+    
+    try:
+        # Get detailed OCR data
+        data = pytesseract.image_to_data(pil_img, output_type=pytesseract.Output.DICT)
+        
+        # Extract confidence values, filtering out -1 (no text detected)
+        confidences = [float(c) for c in data['conf'] if float(c) != -1]
+        
+        if not confidences:
+            return 0.0
+            
+        return sum(confidences) / len(confidences) / 100.0
+    except Exception:
+        return 0.0
+
+def is_handwritten_region(image: np.ndarray, conf_threshold: float = 0.40) -> bool:
+    """
+    Determine if a region is likely handwritten based on Tesseract confidence.
+    """
+    conf = get_tesseract_confidence(image)
+    return conf < conf_threshold
+
+def ocr_region(image: np.ndarray, force_handwritten: bool = False) -> Dict[str, Any]:
+    """
+    Perform OCR on a region, routing to the appropriate engine.
+    """
+    # Decide which engine to use initially
+    if force_handwritten or is_handwritten_region(image):
+        result = run_paddle(image)
+    else:
+        result = run_tesseract(image, psm=6)
+        
+    # If confidence is too low, try the other engine
+    if result["confidence"] < 0.3:
+        alt_engine = "paddle" if result["engine"] == "tesseract" else "tesseract"
+        
+        if alt_engine == "paddle":
+            alt_result = run_paddle(image)
+        else:
+            alt_result = run_tesseract(image, psm=6)
+            
+        # Return the result with higher confidence
+        if alt_result["confidence"] > result["confidence"]:
+            return alt_result
+            
+    return result
+
+def ocr_full_document(image: np.ndarray) -> Dict[str, Any]:
+    """
+    Perform OCR on the full document with intelligent routing.
+    Prioritizes Tesseract for speed, falling back to Paddle only if needed.
+    """
+    # 1. Try Tesseract first (Fast Path)
+    # PSM 6 (Single block of text) is usually good for structured documents
+    # result = run_tesseract(image, psm=6)
+
+    result = run_paddle(image)
+    
+    # 2. Fallback to Paddle only if Tesseract confidence is low (< 40%) or empty
+    # if result["confidence"] < 0.4 or not result["text"].strip():
+    #     print("Note: Low Tesseract confidence, attempting PaddleOCR fallback...")
+    #     paddle_result = run_paddle(image)
+        
+    #     # If Paddle actually got something better, use it
+    #     if paddle_result["confidence"] > result["confidence"]:
+    #         return {
+    #             "full_text": paddle_result["text"],
+    #             "confidence": paddle_result["confidence"],
+    #             "engine": "paddle"
+    #         }
+        
+    return {
+        "full_text": result["text"],
+        "confidence": result["confidence"],
+        "engine": result["engine"]
+    }
