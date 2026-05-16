@@ -12,6 +12,7 @@ langchain-anthropic
 duckduckgo-search
 pypdf
 docx2txt
+pymupdf
 chromadb
 pytesseract
 paddleocr

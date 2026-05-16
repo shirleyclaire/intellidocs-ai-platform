@@ -26,3 +26,8 @@
 
 ## Known Limitations
 - (TBD)
+
+## Ingestion Pipeline
+- **Chunking Strategy**: Used `RecursiveCharacterTextSplitter` with `chunk_size=500` and `chunk_overlap=100`. The 500-character size ensures each vector captures a distinct, focused thought (like a single policy rule), while the 100-character overlap prevents sentences from being cut off awkwardly across chunks, maintaining context.
+- **Metadata**: Every chunk includes a `source_file` (basename of the original document) and a `chunk_index` (integer ID of the chunk). This is critical for the RAG assistant to cite its sources explicitly.
+- **Test Results**: The ingestion pipeline successfully loaded, chunked, and stored documents in a ChromaDB instance, with similarity search returning the correct chunks and preserving the required metadata.
