@@ -17,6 +17,8 @@ if 'df' not in st.session_state:
     st.session_state['df'] = None
 if 'agent' not in st.session_state:
     st.session_state['agent'] = None
+if 'llm_provider' not in st.session_state:
+    st.session_state['llm_provider'] = 'gemini'
 if 'history' not in st.session_state:
     st.session_state['history'] = []
 if 'uploaded_filename' not in st.session_state:
@@ -38,7 +40,8 @@ if uploaded_file is not None:
             else:
                 raise ValueError('Unsupported file type. Please upload an .xlsx or .xls file.')
             st.session_state['df'] = df
-            st.session_state['agent'] = build_agent(df)
+            st.session_state['llm_provider'] = 'gemini'
+            st.session_state['agent'] = build_agent(df, provider=st.session_state['llm_provider'])
             st.session_state['history'] = []  # Clear history on new file
             st.session_state['uploaded_filename'] = uploaded_file.name
             st.sidebar.success(f"File uploaded successfully! ({df.shape[0]} rows, {df.shape[1]} columns)")
@@ -82,7 +85,16 @@ if question:
         # Display assistant response
         with st.chat_message('assistant'):
             with st.spinner('Thinking...'):
-                result = run_query(st.session_state['agent'], question)
+                result = run_query(
+                    st.session_state['agent'],
+                    question,
+                    df=st.session_state['df'],
+                    provider=st.session_state['llm_provider'],
+                )
+                if result.get('agent') is not None:
+                    st.session_state['agent'] = result['agent']
+                if result.get('provider'):
+                    st.session_state['llm_provider'] = result['provider']
             
             if result.get('error'):
                 st.error(result['error'])

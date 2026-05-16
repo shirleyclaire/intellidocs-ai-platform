@@ -16,9 +16,12 @@ def get_search_tool() -> Tool:
         description="Use this to look up definitions, acronyms, or external context about data. Input: a plain English search query."
     )
 
-def get_pandas_tool(df: pd.DataFrame) -> 'Any':
+def get_pandas_tool(df: pd.DataFrame, provider: str = "gemini") -> 'Any':
     """Returns the full LangChain Pandas dataframe agent."""
-    llm = get_llm()
+    try:
+        llm = get_llm(provider)
+    except TypeError:
+        llm = get_llm()
     
     agent = create_pandas_dataframe_agent(
         llm=llm,
