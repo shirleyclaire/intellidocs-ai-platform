@@ -31,18 +31,26 @@ def get_llm():
     grok_key = _secret_or_env("GROK_API_KEY", "XAI_API_KEY")
 
     if gemini_key:
-        return ChatGoogleGenerativeAI(
-            google_api_key=gemini_key,
-            model="gemini-1.5-flash",
-            temperature=0.0,
-        )
+        for gemini_model in ("gemini-2.5-flash", "gemini-2.0-flash"):
+            try:
+                return ChatGoogleGenerativeAI(
+                    google_api_key=gemini_key,
+                    model=gemini_model,
+                    temperature=0.0,
+                )
+            except Exception:
+                continue
 
     if grok_key:
-        return ChatOpenAI(
-            openai_api_base="https://api.x.ai/v1",
-            openai_api_key=grok_key,
-            model_name="grok-2-latest",
-            temperature=0.0,
-        )
+        for grok_model in ("grok-2-latest", "grok-3-latest"):
+            try:
+                return ChatOpenAI(
+                    openai_api_base="https://api.x.ai/v1",
+                    openai_api_key=grok_key,
+                    model_name=grok_model,
+                    temperature=0.0,
+                )
+            except Exception:
+                continue
 
     raise ValueError("Neither GEMINI_API_KEY nor GROK_API_KEY/XAI_API_KEY is set in environment or Streamlit secrets.")
