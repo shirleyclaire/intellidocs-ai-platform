@@ -2,49 +2,47 @@
 
 import os
 from typing import Optional
-from langchain_openai import ChatOpenAI
+
 import streamlit as st
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
-def get_llm() -> ChatOpenAI:
-    """
-    Get a LangChain-compatible LLM instance pointing to OpenRouter.
-    
-    Returns:
-        ChatOpenAI: Configured LLM instance.
-    """
-    # Fallback to Ollama:
-    # To switch to Ollama locally later, replace this function body with:
-    # from langchain_community.chat_models import ChatOllama
-    # return ChatOllama(model="mistral", temperature=0)
 
-    # Get API key from env, fallback to Streamlit secrets
-    openrouter_key: Optional[str] = os.environ.get("OPENROUTER_API_KEY")
-    openai_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
+def _secret_or_env(*names: str) -> Optional[str]:
+    for name in names:
+        value = os.environ.get(name)
+        if value:
+            return value
 
-    if not openrouter_key:
-        try:
-            openrouter_key = st.secrets.get("OPENROUTER_API_KEY")
-        except FileNotFoundError:
-            pass
+    try:
+        for name in names:
+            value = st.secrets.get(name)
+            if value:
+                return value
+    except FileNotFoundError:
+        pass
 
-    if not openai_key:
-        try:
-            openai_key = st.secrets.get("OPENAI_API_KEY")
-        except FileNotFoundError:
-            pass
-            
-    if openai_key:
-        return ChatOpenAI(
-            openai_api_key=openai_key,
-            model_name="gpt-4o-mini",
-            temperature=0.0
+    return None
+
+
+def get_llm():
+    """Get a chat model using Gemini first, then Grok/xAI as fallback."""
+    gemini_key = _secret_or_env("GEMINI_API_KEY")
+    grok_key = _secret_or_env("GROK_API_KEY", "XAI_API_KEY")
+
+    if gemini_key:
+        return ChatGoogleGenerativeAI(
+            google_api_key=gemini_key,
+            model="gemini-1.5-flash",
+            temperature=0.0,
         )
-    elif openrouter_key:
+
+    if grok_key:
         return ChatOpenAI(
-            openai_api_base="https://openrouter.ai/api/v1",
-            openai_api_key=openrouter_key,
-            model_name="mistralai/mistral-7b-instruct",
-            temperature=0.0
+            openai_api_base="https://api.x.ai/v1",
+            openai_api_key=grok_key,
+            model_name="grok-2-latest",
+            temperature=0.0,
         )
-    else:
-        raise ValueError("Neither OPENAI_API_KEY nor OPENROUTER_API_KEY is set in environment or Streamlit secrets.")
+
+    raise ValueError("Neither GEMINI_API_KEY nor GROK_API_KEY/XAI_API_KEY is set in environment or Streamlit secrets.")
