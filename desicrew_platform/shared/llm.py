@@ -48,7 +48,7 @@ def get_llm(provider: str = "gemini"):
         return ChatOpenAI(
             openai_api_base="https://api.x.ai/v1",
             openai_api_key=grok_key,
-            model_name="grok-2-latest",
+            model_name="grok-4.3",
             temperature=0.0,
         )
 
