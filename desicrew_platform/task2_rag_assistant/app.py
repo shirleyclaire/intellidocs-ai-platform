@@ -1,6 +1,13 @@
 import streamlit as st
 import os
 import shutil
+import sys
+
+# Ensure the platform root is on the import path when running this file with Streamlit.
+workspace = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if workspace not in sys.path:
+    sys.path.insert(0, workspace)
+
 from task2_rag_assistant.ingest import ingest_documents
 from task2_rag_assistant.memory import build_memory, is_topic_switch
 from task2_rag_assistant.retriever import build_chain

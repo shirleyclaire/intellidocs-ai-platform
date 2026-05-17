@@ -23,6 +23,7 @@ def load_document(path: str) -> List[Document]:
         
     return loader.load()
 
+# Might be an issue for lengthy technical documents
 def chunk_documents(documents: List[Document]) -> List[Document]:
     """
     Split documents into smaller chunks and append metadata.

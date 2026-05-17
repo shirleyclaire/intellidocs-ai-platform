@@ -1,5 +1,5 @@
 """Memory manager and topic switch detection for Document-Aware RAG Assistant."""
-from langchain.memory import ConversationBufferWindowMemory
+from langchain_classic.memory import ConversationBufferWindowMemory
 from sentence_transformers import SentenceTransformer, util
 
 # Module-level variable to cache the model
@@ -7,6 +7,9 @@ _ENCODER = None
 
 def build_memory() -> ConversationBufferWindowMemory:
     """Build and return a ConversationBufferWindowMemory object."""
+    # k value can be adjusted based on desired memory length.
+    # Lower k -> shorter memory (less context).
+    # Higher k -> longer memory (more context, more tokens used).
     return ConversationBufferWindowMemory(
         k=5,
         memory_key='history',
@@ -32,5 +35,7 @@ def is_topic_switch(prev_query: str, new_query: str, threshold: float = 0.4) -> 
     
     # Compute cosine similarity
     cosine_score = util.cos_sim(embeddings1, embeddings2).item()
+
+    print(f"Cosine similarity: {cosine_score}")
     
     return cosine_score < threshold

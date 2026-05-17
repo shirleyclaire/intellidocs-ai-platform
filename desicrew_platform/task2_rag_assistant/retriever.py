@@ -1,6 +1,6 @@
 """Retrieval chain builder for Document-Aware RAG Assistant."""
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_core.prompts import PromptTemplate
 from shared.llm import get_llm
 from shared.vector_store import get_or_create_store
 from shared.prompts import RAG_SYSTEM_PROMPT
