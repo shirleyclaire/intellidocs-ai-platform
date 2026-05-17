@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from task3_doc_pipeline.preprocess import preprocess_document
 from task3_doc_pipeline.ocr_engine import run_ocr, tokens_to_text
+from task3_doc_pipeline.classifier import classify_document
+
 
 def find_first_image(folder_path: str) -> str:
     """Finds the first valid image file in the specified directory."""
@@ -57,6 +59,20 @@ def main():
             # Print the extracted text output
             print(f"\n--- Extracted Text for {label} ---")
             print(full_text if full_text.strip() else "[No text detected with high confidence]")
+            print("-" * 40 + "\n")
+            
+            # Run the hybrid document classifier
+            print(f"Running hybrid classifier on {label}...")
+            classification_res = classify_document(tokens)
+            
+            # Print the classification result
+            print(f"\n--- Classification Result for {label} ---")
+            print(f"Predicted Class: {classification_res.predicted_class}")
+            print(f"Fuzzy Score:     {classification_res.fuzzy_score:.4f}")
+            print(f"Regex Matched:   {classification_res.regex_matched}")
+            print(f"Flagged:         {classification_res.flagged}")
+            if classification_res.flagged:
+                print(f"Flag Reason:     {classification_res.flag_reason}")
             print("-" * 40 + "\n")
             
             # Convert PIL image (RGB) to OpenCV format (BGR) for correct visualization

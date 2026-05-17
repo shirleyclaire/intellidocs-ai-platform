@@ -50,14 +50,34 @@ A RAG-based assistant for querying policy documents.
 
 ## Task 3 — Document Extraction Pipeline
 An advanced document processing and OCR extraction pipeline for handling diverse physical identity cards and documents.
-- **How to test preprocessing**: Run the visualization test with `python desicrew_platform/task_3_test_ocr.py`
+- **How to test preprocessing, OCR, & Classification**: Run the combined pipeline visualization test with:
+  ```bash
+  venv/Scripts/python desicrew_platform/task_3_test_ocr.py
+  ```
+- **How to run unit tests**:
+  - Run the OCR engine tests:
+    ```bash
+    venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_ocr_engine')"
+    ```
+  - Run the document hybrid classifier tests:
+    ```bash
+    venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_classifier')"
+    ```
 - **What it does**:
-  - Validates and handles document formats: PDF, PNG, JPG, JPEG, TIFF/TIF.
-  - Converts PDF pages into high-fidelity 300 DPI images (using `pdf2image` and `poppler`).
-  - Preprocesses pages in sequence:
-    - Grayscale conversion.
-    - Automated deskewing using the `deskew` library's `determine_skew()` and OpenCV affine rotation.
-    - Denoising using fast non-local means denoising (`h=10`).
-    - Binarisation using Otsu's thresholding for high contrast.
-    - Conversion back to 3-channel RGB PIL Images (supporting PaddleOCR's input format).
+  - **Pre-processing Stage**:
+    - Validates document formats: PDF, PNG, JPG, JPEG, TIFF/TIF.
+    - Converts PDF pages into high-fidelity 300 DPI images (using `pdf2image` and `poppler`).
+    - Applies a sequential cleaning pipeline: grayscale conversion, automated deskewing (via `deskew.determine_skew()`), fast non-local means denoising (`h=10`), local contrast enhancement (CLAHE), and conversion back to 3-channel RGB space.
+  - **OCR Engine Stage** ([ocr_engine.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/ocr_engine.py)):
+    - Uses PaddleOCR as the sole extraction engine (no Tesseract fallback).
+    - Supports both the legacy list-of-lists format and the new PaddleX dictionary key parallel lists format.
+    - Tokenizes text into `OCRToken` objects containing `text`, absolute `bbox` coordinate tuple `(x_min, y_min, x_max, y_max)`, `confidence` score, and `page` index.
+    - Filters tokens using a module-level threshold `OCR_CONFIDENCE_FLOOR = 0.40`.
+    - Concatenates tokens into readable text using `tokens_to_text()`: sorts tokens top-to-bottom and left-to-right by `y_min` (using a 15-pixel tolerance line group) and then by `x_min`.
+  - **Classification Stage** ([classifier.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/classifier.py)):
+    - Determines which of 10 document classes the document belongs to by loading config rules from [document_classes.json](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/config/document_classes.json).
+    - Utilizes a deterministic hybrid of fuzzy anchor scoring (via `rapidfuzz` token-set ratio) and regular expression pattern matching.
+    - Implements STRAIGHT-THROUGH matching and BORDERLINE-RESCUE routing logic to flag low-confidence or non-compliant documents automatically.
+
+
 
