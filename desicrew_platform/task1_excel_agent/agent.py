@@ -6,7 +6,16 @@ from typing import Any
 from .tools import get_pandas_tool
 
 
-def _clean_answer_text(answer: str) -> str:
+def _clean_answer_text(answer: Any) -> str:
+    if isinstance(answer, list):
+        parsed_parts = []
+        for part in answer:
+            if isinstance(part, dict):
+                parsed_parts.append(part.get("text", ""))
+            else:
+                parsed_parts.append(str(part))
+        answer = "".join(parsed_parts)
+
     lines = [line.strip() for line in str(answer).splitlines() if line.strip()]
     if not lines:
         return ""
