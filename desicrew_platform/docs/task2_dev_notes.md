@@ -62,3 +62,28 @@ The following simulation results verify the pipeline:
 Assistant: To file a claim, you should visit our online portal...
 ```
 
+## Architectural Refinements & Bug Fixes
+
+### 1. Context-Aware Query Rewrite Caption Optimization
+- **Goal**: Render the `🧠 *Used conversation history to clarify context: "..."*` memory caption only when context is actually stitched together.
+- **Logic**: Added strict conditions in `app.py`:
+  1. Only triggers if there is actual conversation history (`len(st.session_state.history) > 1`).
+  2. Compares the lowercase and stripped strings of the original query vs the reconstructed query. It only prints the caption if they are genuinely different.
+
+### 2. Referential Follow-Up Bypass for Topic Switches
+- **Goal**: Prevent follow-ups like `"Can you explain that more simply?"` from clearing conversation memory.
+- **Logic**: Built `is_referential_query` in `memory.py` using keyword and query length matching.
+  - Matches pronouns (`this`, `that`, `it`), request terms (`explain`, `simplify`, `rephrase`, `elaborate`), and relative modifiers (`more`, `simply`, `simpler`).
+  - Matches short queries ($\le 4$ words) which are inherently context-dependent.
+  - If a query is identified as referential, the `is_topic_switch` cosine similarity check is bypassed, preserving the full context memory.
+
+### 3. Universal Presentation-Layer 1-Indexing
+- **Goal**: Ensure that page numbers are displayed as 1-indexed (Page 0 -> Page 1, Page 1 -> Page 2) across both new and previously ingested databases.
+- **Logic**: Reverted page number shifting in `ingest.py` to store raw 0-indexed values in the database. In `app.py`, the page number is mathematically converted (`int(page) + 1`) during the source formatting phase. This preserves clean database schemas and ensures display accuracy.
+
+### 4. Active Chroma Connection Release & Lock Prevention
+- **Goal**: Resolve database locking errors and duplicate document chunking in Streamlit.
+- **Logic**: Integrated active garbage collection in `app.py`:
+  - When the user rebuilds the knowledge base, the application sets `st.session_state.chain = None`, runs `gc.collect()` to release active SQLite file locks on Windows, and uses `shutil.rmtree()` to clear out the persistent database folder before recreating the collection, ensuring a fresh index.
+
+

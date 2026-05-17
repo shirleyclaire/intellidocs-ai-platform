@@ -39,6 +39,19 @@ uploaded_files = st.sidebar.file_uploader(
 
 if st.sidebar.button("Build Knowledge Base"):
     if uploaded_files:
+        # Reset st.session_state.chain and force garbage collection to release active SQLite locks on Windows
+        st.session_state.chain = None
+        import gc
+        gc.collect()
+        
+        # Clear out the persistence directory (Chroma DB) to prevent SQLite locks and document duplicates
+        persist_dir = st.session_state.persist_dir
+        if os.path.exists(persist_dir):
+            try:
+                shutil.rmtree(persist_dir)
+            except Exception as e:
+                print(f"Chroma connection clean warning: {e}")
+                
         # Create docs directory
         docs_dir = "./task2_docs"
         if os.path.exists(docs_dir):
@@ -71,7 +84,7 @@ for msg in st.session_state.history:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
         if msg.get("generated_question"):
-            st.caption(f"🧠 *Reconstructed context-aware query:* \"{msg['generated_question']}\"")
+            st.caption(f"🧠 *Used conversation history to clarify context: \"{msg['generated_question']}\"*")
         if msg["role"] == "assistant" and msg.get("sources"):
             with st.expander("Sources"):
                 for source in msg["sources"]:
@@ -106,13 +119,11 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 seen_sources = set()
                 for doc in source_docs:
                     source_name = os.path.basename(doc.metadata.get("source", "Unknown"))
-                    page = doc.metadata.get("page", 1)
+                    page = doc.metadata.get("page", 0)
                     
                     try:
-                        page_val = int(page)
-                        # If page metadata was stored as 0-indexed (e.g. page <= 0), convert it to 1-indexed
-                        if page_val <= 0:
-                            page_val = 1
+                        # Mathematically shift 0-indexed database page numbers to 1-indexed UI page numbers
+                        page_val = int(page) + 1
                     except (ValueError, TypeError):
                         page_val = page
                         
@@ -147,10 +158,14 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 formatted_sources = [f"📄 {name} — Page {page}" for name, page in filtered_sources]
                 
                 # Render reconstructed query if it's different from the original prompt (Requirement 2)
+                # And only if there actually is past context/history to draw from!
                 rewritten = None
-                if generated_question and generated_question.lower() != prompt.lower():
-                    rewritten = generated_question
-                    st.caption(f"🧠 *Reconstructed context-aware query:* \"{rewritten}\"")
+                if len(st.session_state.history) > 1 and generated_question:
+                    orig_clean = prompt.strip().lower()
+                    gen_clean = generated_question.strip().lower()
+                    if orig_clean != gen_clean:
+                        rewritten = generated_question
+                        st.caption(f"🧠 *Used conversation history to clarify context: \"{rewritten}\"*")
                 
                 st.markdown(answer)
                 if formatted_sources:

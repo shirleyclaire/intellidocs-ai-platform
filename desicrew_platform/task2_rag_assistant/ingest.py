@@ -21,15 +21,7 @@ def load_document(path: str) -> List[Document]:
     else:
         raise ValueError(f"Unsupported file type '{ext}'. Supported types are .pdf, .docx, and .txt.")
         
-    docs = loader.load()
-    # Normalize 0-indexed page numbers to 1-indexed page numbers
-    for doc in docs:
-        if 'page' in doc.metadata:
-            try:
-                doc.metadata['page'] = int(doc.metadata['page']) + 1
-            except (ValueError, TypeError):
-                pass
-    return docs
+    return loader.load()
 
 # Might be an issue for lengthy technical documents
 def chunk_documents(documents: List[Document]) -> List[Document]:
