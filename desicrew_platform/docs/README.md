@@ -99,6 +99,21 @@ An advanced document processing and OCR extraction pipeline for handling diverse
     venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_extractor')"
     ```
 
+##📋 Future Roadmap & To-Do List
+### 🎯 Immediate Fixes & Calibration
 
+[ ] Evaluate Ground Truth Accuracy: Build an evaluation script to compare the extracted IDP pipeline values against a ground-truth JSON dataset to calculate actual field-level precision and recall.
+
+[ ] Tune LLM Fallback Prior: Calibrate the GEMINI_RESCUE_CONFIDENCE_PRIOR (currently set to a baseline of 0.70). Adjust this weight based on actual evaluation metrics from the Gemini 1.5 Flash outputs.
+
+[ ] Optimize Session State: Refactor the Streamlit Hub's state management to ensure seamless, memory-efficient transitions when users switch between the Inventory Agent, Support Assistant, and IDP modules.
+
+### 🧠 Pipeline & Model Upgrades
+
+[ ] Implement Computer Vision for Checkboxes: Integrate OpenCV pixel-density calculations (Region of Interest cropping) to deterministically extract unchecked vs. checked states for fields like the "Multiple Policies" consent box.
+
+[ ] Upgrade RAG Assistant Memory: Transition the Document-Aware Support Assistant's memory structure from in-memory session arrays to a persistent vector database (e.g., ChromaDB or Qdrant) for handling significantly longer, multi-session user context.
+
+[ ] Enhance Inventory Agent Analytics: Add native support for generating visual charts (matplotlib/plotly) directly within the chat interface when summarizing Excel findings.
 
 
