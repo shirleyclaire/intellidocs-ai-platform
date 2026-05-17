@@ -44,10 +44,6 @@ def main():
             if not preprocessed_images:
                 print(f"Warning: Preprocessing returned no pages for {label}")
                 continue
-
-            cv2.imshow("Original Image", cv2.imread(image_path))
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
                 
             # Take the first page
             processed_pil = preprocessed_images[0]
@@ -55,6 +51,7 @@ def main():
             # Run OCR on the preprocessed image
             print(f"Running PaddleOCR on preprocessed {label}...")
             tokens = run_ocr(processed_pil)
+            
             full_text = tokens_to_text(tokens)
             
             # Print the extracted text output

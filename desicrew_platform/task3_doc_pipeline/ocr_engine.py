@@ -46,35 +46,74 @@ def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
     # 2. Call ocr.ocr(img_array, cls=True) with a fallback in case cls is not supported
     try:
         result = ocr_model.ocr(img_array, cls=True)
+        print('cls works bhai!')
     except TypeError:
         result = ocr_model.ocr(img_array)
+        print('cls does not work bhai!')
+
+    print('result', result)
 
     # 3. Process the results safely
     tokens: List[OCRToken] = []
     if not result or result[0] is None:
         return tokens
 
-    for item in result[0]:
-        if not item or len(item) != 2:
-            continue
-        polygon, (text, confidence) = item
+    # Get the first (and usually only) item in the result list
+    data = result[0]
 
-        # Calculate bounding box (x_min, y_min, x_max, y_max)
-        x_min = int(min(pt[0] for pt in polygon))
-        y_min = int(min(pt[1] for pt in polygon))
-        x_max = int(max(pt[0] for pt in polygon))
-        y_max = int(max(pt[1] for pt in polygon))
+    # CHECK: Is this the new Dictionary format (PaddleX)?
+    if isinstance(data, dict) and 'rec_texts' in data:
+        # Extract the parallel lists from the dictionary keys
+        texts = data.get('rec_texts', [])
+        scores = data.get('rec_scores', [])
+        polygons = data.get('rec_polys', data.get('dt_polys', []))
 
-        # Filter out low confidence tokens
-        if confidence < OCR_CONFIDENCE_FLOOR:
-            continue
+        # Loop through them by index
+        for i in range(len(texts)):
+            text = texts[i]
+            confidence = float(scores[i])
+            polygon = polygons[i]
 
-        tokens.append(OCRToken(
-            text=text,
-            bbox=(x_min, y_min, x_max, y_max),
-            confidence=confidence,
-            page=page_number
-        ))
+            # Filter out low confidence tokens early
+            if confidence < OCR_CONFIDENCE_FLOOR:
+                continue
+
+            # Calculate bounding box (x_min, y_min, x_max, y_max)
+            x_min = int(min(pt[0] for pt in polygon))
+            y_min = int(min(pt[1] for pt in polygon))
+            x_max = int(max(pt[0] for pt in polygon))
+            y_max = int(max(pt[1] for pt in polygon))
+
+            tokens.append(OCRToken(
+                text=text,
+                bbox=(x_min, y_min, x_max, y_max),
+                confidence=confidence,
+                page=page_number
+            ))
+
+    # FALLBACK: The standard PaddleOCR list-of-lists format
+    elif isinstance(data, list):
+        for item in data:
+            if not item or len(item) != 2:
+                continue
+                
+            polygon, (text, confidence) = item
+            confidence = float(confidence)
+
+            if confidence < OCR_CONFIDENCE_FLOOR:
+                continue
+
+            x_min = int(min(pt[0] for pt in polygon))
+            y_min = int(min(pt[1] for pt in polygon))
+            x_max = int(max(pt[0] for pt in polygon))
+            y_max = int(max(pt[1] for pt in polygon))
+
+            tokens.append(OCRToken(
+                text=text,
+                bbox=(x_min, y_min, x_max, y_max),
+                confidence=confidence,
+                page=page_number
+            ))
 
     return tokens
 
