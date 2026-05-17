@@ -113,3 +113,8 @@ python desicrew_platform/task_3_test_ocr.py
 ```bash
 streamlit run desicrew_platform/task2_rag_assistant/app.py
 ```
+
+### Start Task 3 Document Extraction Dashboard
+```bash
+streamlit run desicrew_platform/task3_doc_pipeline/app.py
+```
