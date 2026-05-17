@@ -61,6 +61,9 @@ def classify_document(tokens: List[OCRToken], config_path: str = "config/documen
     # 1. Concatenate all token texts into a single uppercase string
     concatenated_text = " ".join(t.text for t in tokens).upper()
     
+    print('concatenated text', concatenated_text)
+
+
     # 2. Load JSON config robustly, supporting path resolution relative to desicrew_platform/
     resolved_path = config_path
     if not os.path.exists(resolved_path):
@@ -84,6 +87,8 @@ def classify_document(tokens: List[OCRToken], config_path: str = "config/documen
     
     # 4. Regex validation
     regex_matched = validate_regex(concatenated_text, predicted_class, regex_dict)
+
+    print('regex matched?:', regex_matched)
     
     # 5. Routing Logic
     flagged = True
@@ -98,6 +103,8 @@ def classify_document(tokens: List[OCRToken], config_path: str = "config/documen
     # CONFLICT / FAILURE
     else:
         flag_reason = f"Low fuzzy confidence ({fuzzy_score:.4f}) or missing required regex signature."
+
+    print('flag reason: ', flag_reason)
         
     return ClassificationResult(
         predicted_class=predicted_class,

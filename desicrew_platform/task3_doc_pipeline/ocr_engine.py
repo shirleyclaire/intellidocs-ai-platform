@@ -46,12 +46,10 @@ def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
     # 2. Call ocr.ocr(img_array, cls=True) with a fallback in case cls is not supported
     try:
         result = ocr_model.ocr(img_array, cls=True)
-        print('cls works bhai!')
+
     except TypeError:
         result = ocr_model.ocr(img_array)
-        print('cls does not work bhai!')
 
-    print('result', result)
 
     # 3. Process the results safely
     tokens: List[OCRToken] = []

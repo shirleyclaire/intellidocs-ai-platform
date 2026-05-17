@@ -1,0 +1,27 @@
+{
+  "classes": ["Aadhaar", "PAN", "DrivingLicence", "Passport", "NACH", "FATCA", "BenefitIllustration", "MoralHazard", "MultiplePolicies", "SuitabilityProfiler"],
+  "fuzzy_anchors": {
+    "Aadhaar": ["Unique Identification Authority", "Government of India", "UIDAI"],
+    "PAN": ["Income Tax Department", "Permanent Account Number", "GOVT OF INDIA"],
+    "DrivingLicence": ["Driving Licence", "Motor Vehicles Act", "Transport"],
+    "Passport": ["Republic of India", "Passport", "MRZ"],
+    "NACH": ["National Automated Clearing House", "NACH Mandate", "MICR"],
+    "FATCA": ["FATCA Annexure", "Tax Identification", "Foreign Account Tax"],
+    "BenefitIllustration": ["Benefit Illustration", "Declaration by Proposer"],
+    "MoralHazard": ["Moral Hazard", "Life Assured", "Nominee"],
+    "MultiplePolicies": ["Multiple Policies", "Consent Form", "Proposer"],
+    "SuitabilityProfiler": ["Suitability", "Profiler", "Agent"]
+  },
+  "validation_regex": {
+    "Aadhaar": "\\b\\d{4}\\s?\\d{4}\\s?\\d{4}\\b",
+    "PAN": "\\b[A-Z]{5}[0-9]{4}[A-Z]{1}\\b",
+    "DrivingLicence": "\\b[A-Z]{2}[-\\s]?\\d{2,13}\\b",
+    "Passport": "\\b[A-Z]{1}[0-9]{7}\\b",
+    "NACH": "\\b[A-Z]{4}0[A-Z0-9]{6}\\b",
+    "FATCA": "(?i)FATCA",
+    "BenefitIllustration": "(?i)Illustration",
+    "MoralHazard": "(?i)Hazard",
+    "MultiplePolicies": "(?i)Multiple",
+    "SuitabilityProfiler": "(?i)Profiler"
+  }
+}
