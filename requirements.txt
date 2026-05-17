@@ -9,6 +9,7 @@ langchain-experimental
 langchain-google-genai
 langchain-openai
 langchain-anthropic
+sentence-transformers
 duckduckgo-search
 pypdf
 docx2txt
