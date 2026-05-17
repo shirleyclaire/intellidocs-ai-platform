@@ -47,3 +47,17 @@ A RAG-based assistant for querying policy documents.
   - Uses MMR retrieval for diverse context.
   - Features semantic topic switching to clear context when moving between unrelated questions.
   - Provides full source citations (file name and page number).
+
+## Task 3 — Document Extraction Pipeline
+An advanced document processing and OCR extraction pipeline for handling diverse physical identity cards and documents.
+- **How to test preprocessing**: Run the visualization test with `python desicrew_platform/task_3_test_ocr.py`
+- **What it does**:
+  - Validates and handles document formats: PDF, PNG, JPG, JPEG, TIFF/TIF.
+  - Converts PDF pages into high-fidelity 300 DPI images (using `pdf2image` and `poppler`).
+  - Preprocesses pages in sequence:
+    - Grayscale conversion.
+    - Automated deskewing using the `deskew` library's `determine_skew()` and OpenCV affine rotation.
+    - Denoising using fast non-local means denoising (`h=10`).
+    - Binarisation using Otsu's thresholding for high contrast.
+    - Conversion back to 3-channel RGB PIL Images (supporting PaddleOCR's input format).
+

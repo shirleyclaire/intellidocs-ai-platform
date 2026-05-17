@@ -20,5 +20,6 @@ paddlepaddle
 opencv-python
 pdf2image
 Pillow
+deskew
 python-dotenv
 ddgs>=8.0.0

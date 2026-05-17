@@ -4,26 +4,26 @@
 The accuracy of OCR (Optical Recognition) depends heavily on the quality of the input image. Scanned insurance forms often suffer from skew, noise, and uneven lighting. We implement a multi-stage pre-processing pipeline to normalize images before passing them to the OCR engines.
 
 ### 1. PDF to Image Conversion
-- **Tool**: PyMuPDF (`fitz`).
-- **Logic**: Renders PDF pages as high-resolution (300 DPI) pixmaps and converts them to numpy arrays. High DPI is critical for capturing small text in dense forms.
+- **Tool**: `pdf2image` (using Poppler).
+- **Logic**: Converts PDF pages into high-fidelity 300 DPI PIL Images. High DPI is critical for capturing small details and text on compact documents like ID cards.
 
 ### 2. Deskewing
-- **Logic**: Calculates the skew angle of the text by finding the minimum area rectangle containing all non-white pixels.
-- **Threshold**: Only applies rotation if the detected angle is > 0.5 degrees to avoid rotating correctly aligned documents due to sub-pixel noise.
-- **Benefit**: Ensures that text lines are perfectly horizontal, which is required for efficient layout analysis and line-by-line OCR.
+- **Tool**: `deskew` library.
+- **Logic**: Calculates the skew angle of the text using `deskew.determine_skew()`.
+- **Threshold**: Only applies affine rotation (via OpenCV) if the absolute detected angle is >= 0.5 degrees to avoid unnecessary rotation of correctly aligned documents.
+- **Benefit**: Standardizes document alignment to horizontal, crucial for both Tesseract and PaddleOCR line segmentations.
 
 ### 3. Denoising
-- **Logic**: Uses `cv2.fastNlMeansDenoising`.
-- **Benefit**: Removes "salt and pepper" noise and scanning artifacts that could be mistaken for punctuation or small characters.
+- **Tool**: OpenCV `cv2.fastNlMeansDenoising` with smoothing parameter `h=10`.
+- **Benefit**: Removes scanner grain, salt-and-pepper noise, and fine artifacts that could result in OCR character recognition errors.
 
 ### 4. Binarisation
-- **Logic**: Adaptive Thresholding (`cv2.adaptiveThreshold` with Gaussian window).
-- **Why Adaptive vs. Otsu's?**:
-    - **Otsu's Method**: Calculates a global threshold. This fails when a document has uneven lighting or variable ink density (common in handwritten forms or scans with shadows).
-    - **Adaptive Thresholding**: Calculates the threshold for every pixel based on its local neighborhood. This handles gradients and shadows much more robustly, preserving text clarity across the entire page.
+- **Tool**: Otsu's Thresholding (`cv2.threshold` with `cv2.THRESH_BINARY + cv2.THRESH_OTSU`).
+- **Benefit**: Automatically determines the optimal threshold value by minimizing intra-class variance of the black and white pixels, maximizing contrast for reliable character extraction.
 
 ### 5. Final Output
-The pipeline produces a single-channel binary image (values 0 or 255 only) which maximizes contrast for the OCR engine.
+- **Format**: 3-channel RGB PIL Image (reconverted from binary single-channel).
+- **Reason**: PaddleOCR requires 3-channel (RGB) input format, so the binarised 1-channel image is cast back to RGB space to maintain full compatibility across engines.
 
 ## Implementation Log
 - Initialized empty project structure.
