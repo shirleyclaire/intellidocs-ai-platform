@@ -17,7 +17,7 @@ def build_memory() -> ConversationBufferWindowMemory:
         output_key='answer'
     )
 
-def is_topic_switch(prev_query: str, new_query: str, threshold: float = 0.4) -> bool:
+def is_topic_switch(prev_query: str, new_query: str, threshold: float = 0.22) -> bool:
     """
     Check if the topic has switched significantly between queries.
     Uses sentence-transformers to encode queries and compute cosine similarity.

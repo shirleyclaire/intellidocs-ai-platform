@@ -42,6 +42,7 @@ Answer:"""
         retriever=retriever,
         memory=memory,
         return_source_documents=True,
+        return_generated_question=True,
         combine_docs_chain_kwargs={'prompt': prompt}
     )
     

@@ -70,6 +70,8 @@ if st.sidebar.button("Build Knowledge Base"):
 for msg in st.session_state.history:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+        if msg.get("generated_question"):
+            st.caption(f"🧠 *Reconstructed context-aware query:* \"{msg['generated_question']}\"")
         if msg["role"] == "assistant" and msg.get("sources"):
             with st.expander("Sources"):
                 for source in msg["sources"]:
@@ -80,8 +82,8 @@ if prompt := st.chat_input("Ask a question about your documents"):
     if st.session_state.chain is None:
         st.warning("Please upload documents and build the knowledge base first.")
     else:
-        # Check for topic switch
-        if is_topic_switch(st.session_state.last_question, prompt):
+        # Check for topic switch using the optimal 0.22 similarity threshold
+        if is_topic_switch(st.session_state.last_question, prompt, threshold=0.22):
             st.session_state.memory.clear()
             st.info("Topic switched — starting fresh context.")
             # We don't need to rebuild the chain, just clearing memory is enough as ConversationalRetrievalChain uses the memory object
@@ -97,13 +99,58 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 response = st.session_state.chain.invoke({"question": prompt})
                 answer = response["answer"]
                 source_docs = response.get("source_documents", [])
+                generated_question = response.get("generated_question", "").strip()
                 
-                # Format sources
-                formatted_sources = []
+                # Deduplicate & convert page indexes to 1-indexed (guard against 0-index)
+                unique_sources = []
+                seen_sources = set()
                 for doc in source_docs:
                     source_name = os.path.basename(doc.metadata.get("source", "Unknown"))
-                    page = doc.metadata.get("page", "unknown")
-                    formatted_sources.append(f"📄 {source_name} — Page {page}")
+                    page = doc.metadata.get("page", 1)
+                    
+                    try:
+                        page_val = int(page)
+                        # If page metadata was stored as 0-indexed (e.g. page <= 0), convert it to 1-indexed
+                        if page_val <= 0:
+                            page_val = 1
+                    except (ValueError, TypeError):
+                        page_val = page
+                        
+                    pair = (source_name, page_val)
+                    if pair not in seen_sources:
+                        seen_sources.add(pair)
+                        unique_sources.append(pair)
+                
+                # Smart Citation Filtering (Requirement 3)
+                # Only keep sources whose names are explicitly mentioned in the LLM's response
+                # to prevent showing unrelated documents that the vector retriever pulled in.
+                answer_lower = answer.lower()
+                has_explicit_mention = False
+                for source_name, _ in unique_sources:
+                    # Clean filename e.g. "general_policy.pdf" -> "general_policy" or "general policy"
+                    base_clean = os.path.splitext(source_name)[0].lower()
+                    if base_clean in answer_lower or base_clean.replace('_', ' ') in answer_lower:
+                        has_explicit_mention = True
+                        break
+                
+                filtered_sources = []
+                if has_explicit_mention:
+                    for source_name, page_val in unique_sources:
+                        base_clean = os.path.splitext(source_name)[0].lower()
+                        if base_clean in answer_lower or base_clean.replace('_', ' ') in answer_lower:
+                            filtered_sources.append((source_name, page_val))
+                else:
+                    # Fallback to all unique sources if no document filenames are directly cited
+                    filtered_sources = unique_sources
+                
+                # Format final sources for display
+                formatted_sources = [f"📄 {name} — Page {page}" for name, page in filtered_sources]
+                
+                # Render reconstructed query if it's different from the original prompt (Requirement 2)
+                rewritten = None
+                if generated_question and generated_question.lower() != prompt.lower():
+                    rewritten = generated_question
+                    st.caption(f"🧠 *Reconstructed context-aware query:* \"{rewritten}\"")
                 
                 st.markdown(answer)
                 if formatted_sources:
@@ -115,7 +162,8 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 st.session_state.history.append({
                     "role": "assistant", 
                     "content": answer, 
-                    "sources": formatted_sources
+                    "sources": formatted_sources,
+                    "generated_question": rewritten
                 })
                 
                 st.session_state.last_question = prompt
