@@ -54,7 +54,7 @@ def is_referential_query(query: str) -> bool:
             
     return False
 
-def is_topic_switch(prev_query: str, new_query: str, threshold: float = 0.22) -> bool:
+def is_topic_switch(prev_query: str, new_query: str, threshold: float = 0.19) -> bool:
     """
     Check if the topic has switched significantly between queries.
     Uses sentence-transformers to encode queries and compute cosine similarity.
