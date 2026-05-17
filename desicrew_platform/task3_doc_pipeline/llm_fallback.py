@@ -13,14 +13,29 @@ def load_gemini_api_key() -> str:
     """
     Robust API Key loader. Looks in:
     1. GEMINI_API_KEY environment variable.
-    2. .streamlit/secrets.toml under [gemini] api_key.
+    2. Streamlit native secrets (flat or nested under [gemini] api_key).
+    3. .streamlit/secrets.toml under [gemini] api_key.
     """
     # 1. Environment variable check
     env_key = os.environ.get("GEMINI_API_KEY")
     if env_key:
         return env_key.strip()
         
-    # 2. Check streamlit secrets.toml in multiple levels
+    # 2. Check Streamlit native secrets (highly critical on Streamlit Cloud)
+    try:
+        import streamlit as st
+        # Direct lookup
+        direct_key = st.secrets.get("GEMINI_API_KEY")
+        if direct_key and isinstance(direct_key, str):
+            return direct_key.strip()
+        # Nested lookup
+        nested_key = st.secrets.get("gemini", {}).get("api_key")
+        if nested_key:
+            return nested_key.strip()
+    except Exception:
+        pass
+        
+    # 3. Check streamlit secrets.toml in multiple levels as a local fallback
     possible_paths = [
         os.path.join(".streamlit", "secrets.toml"),
         os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".streamlit", "secrets.toml"),

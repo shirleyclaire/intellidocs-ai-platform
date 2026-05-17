@@ -9,17 +9,36 @@ from langchain_openai import ChatOpenAI
 
 
 def _secret_or_env(*names: str) -> Optional[str]:
+    # 1. Check environment variables first
     for name in names:
         value = os.environ.get(name)
         if value:
-            return value
+            return value.strip()
 
+    # 2. Check Streamlit secrets
     try:
+        # Check direct/flat secrets (e.g. st.secrets["GEMINI_API_KEY"])
         for name in names:
             value = st.secrets.get(name)
-            if value:
-                return value
-    except FileNotFoundError:
+            if value and isinstance(value, str):
+                return value.strip()
+            
+        # Check nested structures (e.g. st.secrets["gemini"]["api_key"])
+        for name in names:
+            name_lower = name.lower()
+            if "gemini" in name_lower:
+                val = st.secrets.get("gemini", {}).get("api_key")
+                if val:
+                    return val.strip()
+            elif "openai" in name_lower:
+                val = st.secrets.get("openai", {}).get("api_key")
+                if val:
+                    return val.strip()
+            elif "grok" in name_lower or "xai" in name_lower:
+                val = st.secrets.get("grok", {}).get("api_key") or st.secrets.get("xai", {}).get("api_key")
+                if val:
+                    return val.strip()
+    except Exception:
         pass
 
     return None

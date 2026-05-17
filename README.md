@@ -109,6 +109,11 @@ python -c "import sys; sys.path.append('desicrew_platform'); import unittest; un
 python desicrew_platform/task_3_test_ocr.py
 ```
 
+### Start Master Enterprise AI & IDP Suite Hub
+```bash
+streamlit run desicrew_platform/main_hub.py
+```
+
 ### Start RAG Document Assistant Interface
 ```bash
 streamlit run desicrew_platform/task2_rag_assistant/app.py
