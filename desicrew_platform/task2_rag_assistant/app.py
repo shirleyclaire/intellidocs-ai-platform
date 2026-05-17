@@ -24,8 +24,9 @@ if "chain" not in st.session_state:
     st.session_state.chain = None
 if "last_question" not in st.session_state:
     st.session_state.last_question = None
+import tempfile
 if "persist_dir" not in st.session_state:
-    st.session_state.persist_dir = "./chroma_db"
+    st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), "chroma_db"))
 
 st.title("📄 Document Support Assistant")
 

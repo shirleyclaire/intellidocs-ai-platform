@@ -51,7 +51,12 @@ def get_llm(provider: str = "gemini"):
     if provider == "gemini":
         gemini_key = _secret_or_env("GEMINI_API_KEY")
         if not gemini_key:
-            raise ValueError("GEMINI_API_KEY is not set in environment or Streamlit secrets.")
+            raise ValueError(
+                "GEMINI_API_KEY is not set in environment or Streamlit secrets. "
+                "If you are deployed on Streamlit Cloud, please go to your App Settings -> Secrets console, "
+                "and paste your TOML secrets there:\n\n"
+                "[gemini]\napi_key = \"YOUR_KEY_HERE\""
+            )
 
         return ChatGoogleGenerativeAI(
             google_api_key=gemini_key,
@@ -62,7 +67,12 @@ def get_llm(provider: str = "gemini"):
     if provider == "grok":
         grok_key = _secret_or_env("GROK_API_KEY", "XAI_API_KEY")
         if not grok_key:
-            raise ValueError("GROK_API_KEY or XAI_API_KEY is not set in environment or Streamlit secrets.")
+            raise ValueError(
+                "GROK_API_KEY or XAI_API_KEY is not set in environment or Streamlit secrets. "
+                "If you are deployed on Streamlit Cloud, please go to your App Settings -> Secrets console, "
+                "and paste your TOML secrets there:\n\n"
+                "[grok]\napi_key = \"YOUR_KEY_HERE\""
+            )
 
         return ChatOpenAI(
             openai_api_base="https://api.x.ai/v1",

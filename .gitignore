@@ -42,3 +42,7 @@ __pycache__/
 chroma_db/
 .chroma/
 vector_store/
+
+# Exceptions to wildcard ignores (Required for Streamlit Cloud deployment)
+!packages.txt
+!**/packages.txt
