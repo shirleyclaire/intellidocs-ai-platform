@@ -78,6 +78,27 @@ An advanced document processing and OCR extraction pipeline for handling diverse
     - Determines which of 10 document classes the document belongs to by loading config rules from [document_classes.json](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/config/document_classes.json).
     - Utilizes a deterministic hybrid of fuzzy anchor scoring (via `rapidfuzz` token-set ratio) and regular expression pattern matching.
     - Implements STRAIGHT-THROUGH matching and BORDERLINE-RESCUE routing logic to flag low-confidence or non-compliant documents automatically.
+  - **Extraction Stage** ([extractor.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/extractor.py)):
+    - Extracts target fields dynamically using a robust dispatch plan mapped to the 10 document classes.
+    - Performs **Regex Extraction** with index character-to-token mappings to capture full matching bounds and preserve minimum OCR confidence.
+    - Performs **Spatial Extraction** with fuzzy anchor resolution ($\ge 75$ match ratio) and proximity constraints horizontally (`right`) or vertically (`below`).
+    - Uses smart horizontal line isolation for vertical collection, grouping adjacent terms together in a single row (tolerance: 20px) and sorting left-to-right.
+    - Employs a critical fallback guarantee to return placeholders (`method="failed"`) for any missing fields to preserve exact output schema lengths.
+
+- **How to run unit tests**:
+  - Run the OCR engine tests:
+    ```bash
+    venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_ocr_engine')"
+    ```
+  - Run the document hybrid classifier tests:
+    ```bash
+    venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_classifier')"
+    ```
+  - Run the field extractor tests:
+    ```bash
+    venv/Scripts/python -c "import sys; sys.path.append('desicrew_platform'); import unittest; unittest.main(module='test_extractor')"
+    ```
+
 
 
 

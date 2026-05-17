@@ -48,9 +48,24 @@ The accuracy of OCR (Optical Recognition) depends heavily on the quality of the 
     - *BORDERLINE_RESCUE*: Matches with definitive fuzzy confidence ($\ge 0.92$) but fails the class regex (e.g., due to OCR missing the card/policy number) $\rightarrow$ `flagged = False`.
     - *CONFLICT*: Otherwise $\rightarrow$ `flagged = True` (flag reason recorded).
 
+- **Field Extraction**: Implemented in [extractor.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/extractor.py) using deterministic regular expressions and spatial proximity coordinate metrics.
+  - **Data Structure**: `ExtractedField` encapsulates the target field name, extracted value, method type (`"regex"`, `"spatial"`, or `"failed"`), minimum OCR confidence, and scorer placeholder.
+  - **Regex Extraction**:
+    - Generates a text map corresponding index ranges to exact OCR token objects.
+    - Resolves sub-token boundaries and calculates the strict **minimum** confidence among all matching tokens.
+  - **Spatial Extraction**:
+    - Searches for anchor labels with a `rapidfuzz.fuzz.ratio` threshold of $\ge 75$.
+    - **Right Direction**: Identifies tokens horizontally aligned with the anchor (vertical offset $\le 20$px) and within `pixel_threshold` distance.
+    - **Below Direction**: Identifies tokens directly underneath the anchor (left vertical column horizontal offset $\le 50$px) and within `pixel_threshold` distance.
+    - **Smart Grouping**: For the vertical direction, it identifies the nearest line immediately underneath the label, isolates other tokens on that same line (vertical offset $\le 20$px), and sorts them left-to-right to maintain natural reading order for names.
+  - **Dispatch Plan & Fallback Safety**:
+    - Maps 10 document classes to target schemas of extraction lambdas.
+    - Evaluates the plan sequentially; if any extraction returns `None`, it appends a placeholder field with `method="failed"`, ensuring the output schema length matches exactly.
+
 ## Architecture Decisions
 - **Deterministic Hybrid Classification**: By utilizing string-distance metric heuristics (`RapidFuzz` anchors) combined with validation patterns (`re` patterns) instead of deep-learning classifiers, the system achieves near-instantaneous execution times (< 1ms) and 100% deterministic, explainable routing paths.
-- **Configurability**: Anchor phrases and regular expressions are externalized in `config/document_classes.json` for easy extension to new document types.
+- **Configurability**: Anchor phrases, classification regex, and extraction patterns are externalized in `config/document_classes.json` for easy extension to new document types.
+- **Strict Spatial Coordinate Bounds**: Coordinates are treated as pixel distances relative to the preprocessed DPI representation. Offsets are bounded via precise thresholds to prevent cross-column contamination.
 
 ## Debug/Change Log
 - Scaffolded pipeline files.
@@ -60,4 +75,8 @@ The accuracy of OCR (Optical Recognition) depends heavily on the quality of the 
 - Implemented `classifier.py` (RapidFuzz token-set matching and regular expression validation).
 - Integrated classifier execution and results formatting in the pipeline test script `task_3_test_ocr.py`.
 - Developed `test_classifier.py` unit test suite containing 6 tests covering all classification routes.
+- Implemented `extractor.py` (character-to-token regex mapper, vertical and horizontal spatial coordinate extractors, and dispatcher).
+- Created a robust 6-test suite in `test_extractor.py` covering confidence bounds, spatial proximity groups, and fallbacks.
+- Updated `task_3_test_ocr.py` to seamlessly execute extraction and print results beautifully.
+
 

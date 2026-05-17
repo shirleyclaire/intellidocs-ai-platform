@@ -4,6 +4,7 @@ import numpy as np
 from task3_doc_pipeline.preprocess import preprocess_document
 from task3_doc_pipeline.ocr_engine import run_ocr, tokens_to_text
 from task3_doc_pipeline.classifier import classify_document
+from task3_doc_pipeline.extractor import extract_fields
 
 
 def find_first_image(folder_path: str) -> str:
@@ -74,6 +75,16 @@ def main():
             if classification_res.flagged:
                 print(f"Flag Reason:     {classification_res.flag_reason}")
             print("-" * 40 + "\n")
+            
+            # Run the field extractor
+            print(f"Running field extractor on {label}...")
+            extracted_fields = extract_fields(classification_res.predicted_class, tokens)
+            
+            # Print the extraction results
+            print(f"\n--- Extracted Fields for {label} (Class: {classification_res.predicted_class}) ---")
+            for field in extracted_fields:
+                print(f"Field: {field.field_name:<20} | Value: {str(field.value):<30} | Method: {field.method:<8} | OCR Confidence: {field.ocr_confidence:.4f}")
+            print("-" * 60 + "\n")
             
             # Convert PIL image (RGB) to OpenCV format (BGR) for correct visualization
             processed_cv = cv2.cvtColor(np.array(processed_pil), cv2.COLOR_RGB2BGR)

@@ -23,5 +23,17 @@
     "MoralHazard": "(?i)Hazard",
     "MultiplePolicies": "(?i)Multiple",
     "SuitabilityProfiler": "(?i)Profiler"
+  },
+  "field_extraction_regex": {
+    "aadhaar_number": "\\b\\d{4}\\s?\\d{4}\\s?\\d{4}\\b",
+    "pan_number": "\\b[A-Z]{5}[0-9]{4}[A-Z]\\b",
+    "ifsc_code": "\\b[A-Z]{4}0[A-Z0-9]{6}\\b",
+    "dl_number": "\\b[A-Z]{2}[-\\s]?\\d{2}[-\\s]?\\d{4,11}\\b",
+    "passport_number": "\\b[A-Z][0-9]{7}\\b",
+    "date_dmy": "\\b\\d{1,2}[\\/\\-\\.]\\d{1,2}[\\/\\-\\.]\\d{2,4}\\b",
+    "mrz_line_2": "[A-Z0-9<]{44}",
+    "bank_account_number": "\\b\\d{9,18}\\b",
+    "application_number": "\\b[A-Z0-9]{6,15}\\b",
+    "amount_figures": "\\b\\d{1,3}(?:,\\d{2,3})*(?:\\.\\d{2})?\\b"
   }
 }
