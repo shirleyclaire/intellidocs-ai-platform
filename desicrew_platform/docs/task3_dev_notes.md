@@ -62,10 +62,32 @@ The accuracy of OCR (Optical Recognition) depends heavily on the quality of the 
     - Maps 10 document classes to target schemas of extraction lambdas.
     - Evaluates the plan sequentially; if any extraction returns `None`, it appends a placeholder field with `method="failed"`, ensuring the output schema length matches exactly.
 
+- **Field Confidence Scoring**: Implemented in [scorer.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/scorer.py) to assess the reliability of each extracted field.
+  - **Scoring Constants**:
+    - `REGEX_BASE_SCORE = 1.0` (Regex matches are highly authoritative as they strictly adhere to known syntax patterns).
+    - `SPATIAL_BASE_SCORE = 0.95` (Spatial proximity extraction is inherently slightly less reliable than strict regex, accounting for potential layout shifts).
+    - `FIELD_FLAG_THRESHOLD = 0.75` (Fields scoring below this are flagged for human-in-the-loop review).
+  - **Formula**:
+    - For `method == "regex"`: $Score = REGEX\_BASE\_SCORE \times OCR\_confidence$
+    - For `method == "spatial"`: $Score = SPATIAL\_BASE\_SCORE \times OCR\_confidence$
+    - For missing fields (`value is None` or `method == "failed"`): $Score = 0.0$
+    - Scores are clamped to $[0.0, 1.0]$ and stored in `field.extraction_confidence`.
+
+- **Exception Handling / Multimodal LLM Fallback**: Implemented in [llm_fallback.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/llm_fallback.py) to handle AI Exception Handling (rescue failed/borderline fields without needing human intervention).
+  - **Routing Criteria**: Any field where the value is missing or the confidence score is $< 0.75$ is automatically sent to the fallback route.
+  - **API Loader**: Safely checks `GEMINI_API_KEY` env var and `.streamlit/secrets.toml` under `[gemini]` `api_key` using standard standard `tomllib`.
+  - **Direct Multimodal Inference**: Instead of re-running OCR or text parsing, it passes the preprocessed PIL Image directly alongside a target prompt to `gemini-1.5-flash`.
+  - **Prompting & Output Guardrails**: Configures the model with `"response_mime_type": "application/json"` and prompts it to return a valid JSON object matching the exact field names.
+  - **Post-Processing**: Updates the field in-place with the rescued value, sets `method = "llm_fallback"`, and assigns a default confidence of `0.90` (since Gemini's visual inference is highly robust).
+
+- **Output Formatter**: Implemented in [output_formatter.py](file:///c:/Users/Shirley%20Claire/Desktop/Shirley/Projects/intellidocs-ai-platform/desicrew_platform/task3_doc_pipeline/output_formatter.py) to compile the final JSON structures.
+  - **Compliant Output Schema**: Combines classification statistics, detailed field confidence, extraction method, and flagging state.
+  - **Consolidated Audit Report**: Outputs individual `<document_id>.json` files and aggregates all records requiring human verification into a central `flagging_report.json`, detailing precise, machine-readable rationales (e.g. classification failure reasons or low-confidence field details).
+
 ## Architecture Decisions
 - **Deterministic Hybrid Classification**: By utilizing string-distance metric heuristics (`RapidFuzz` anchors) combined with validation patterns (`re` patterns) instead of deep-learning classifiers, the system achieves near-instantaneous execution times (< 1ms) and 100% deterministic, explainable routing paths.
 - **Configurability**: Anchor phrases, classification regex, and extraction patterns are externalized in `config/document_classes.json` for easy extension to new document types.
-- **Strict Spatial Coordinate Bounds**: Coordinates are treated as pixel distances relative to the preprocessed DPI representation. Offsets are bounded via precise thresholds to prevent cross-column contamination.
+- **Straight-Through Processing (STP) with AI Exception Handling**: By utilizing lightning-fast deterministic rules for the vast majority of standard extractions and only routing anomalies to Gemini, the platform maximizes throughput, ensures near-zero hallucination risk, saves considerable API computing costs, and eliminates unnecessary human labor.
 
 ## Debug/Change Log
 - Scaffolded pipeline files.
@@ -78,5 +100,11 @@ The accuracy of OCR (Optical Recognition) depends heavily on the quality of the 
 - Implemented `extractor.py` (character-to-token regex mapper, vertical and horizontal spatial coordinate extractors, and dispatcher).
 - Created a robust 6-test suite in `test_extractor.py` covering confidence bounds, spatial proximity groups, and fallbacks.
 - Updated `task_3_test_ocr.py` to seamlessly execute extraction and print results beautifully.
+- Implemented `scorer.py` (deterministic formulas, clamping, and field confidence calculation).
+- Implemented `llm_fallback.py` (Gemini credentials loading, multimodal vision inference, and in-place field updates).
+- Implemented `output_formatter.py` (structured schemas, individual and consolidated JSON writers, and clear human rationales).
+- Created a dedicated test suite in `test_scorer_formatter.py` verifying correct scoring math, threshold flagging, and JSON storage.
+- Integrated all pipeline stages in the final `task_3_test_ocr.py` script.
+
 
 
