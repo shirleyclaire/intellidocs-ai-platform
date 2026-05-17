@@ -290,42 +290,33 @@ if st.session_state["pipeline_complete"]:
             conf = info["confidence"]
             val = info["value"]
             method = info["method"]
+            flagged = info.get("flagged", False)
             
-            # Select confidence badge attributes
-            if conf > 0.85:
-                badge_bg = "#2e7d32"  # Green
-                badge_lbl = "High"
-            elif conf > 0.75:
-                badge_bg = "#e65100"  # Amber
-                badge_lbl = "Medium"
-            else:
-                badge_bg = "#c62828"  # Red
-                badge_lbl = "Low"
+            # Use three columns for perfect vertical alignment and scannability
+            col_key, col_val, col_badge = st.columns([3, 5, 2])
+            
+            with col_key:
+                flag_tag = ' <span style="background:#7f1d1d;color:#fca5a5;padding:2px 6px;border-radius:4px;font-size:0.75em;margin-left:6px">REVIEW</span>' if flagged else ""
+                st.markdown(f'<div style="padding-top: 4px;"><span style="color:#94a3b8; font-weight:600; font-size:0.95em;">{field_name}</span>{flag_tag}</div>', unsafe_allow_html=True)
                 
-            st.markdown(
-                f'<div class="field-card">'
-                f'  <div style="display: flex; justify-content: space-between; align-items: center;">'
-                f'    <span style="font-weight: 700; color: #1e293b; font-size: 1em;">{field_name}</span>'
-                f'    <span style="background-color: {badge_bg}; color: white; padding: 2px 8px; '
-                f'                 border-radius: 12px; font-size: 0.8em; font-weight: 600;">'
-                f'      {badge_lbl} ({conf:.1%})'
-                f'    </span>'
-                f'  </div>'
-                f'  <div style="margin-top: 8px;">'
-                f'    <strong style="color: #64748b; font-size: 0.9em;">Value:</strong> '
-                f'    <code style="font-size: 1em; color: #0284c7; font-weight: 600;">'
-                f'      {val if val is not None else "null"}'
-                f'    </code>'
-                f'  </div>'
-                f'  <div style="margin-top: 6px; font-size: 0.8em; color: #94a3b8;">'
-                f'    Method: <span style="font-family: monospace; background-color: #f1f5f9; '
-                f'                         padding: 2px 6px; border-radius: 4px; color: #475569;">'
-                f'      {method}'
-                f'    </span>'
-                f'  </div>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+            with col_val:
+                if val is None or str(val).strip() == "":
+                    st.markdown('<div style="padding-top: 4px;"><span style="color:#fbbf24; font-style:italic; font-weight:bold; font-size:0.95em;">—</span></div>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<div style="padding-top: 4px;"><span style="color:#e2e8f0; font-weight:500; font-size:0.95em;">{val}</span></div>', unsafe_allow_html=True)
+                    
+            with col_badge:
+                if conf >= 0.85:
+                    badge_style = "background:#065f46; color:#34d399; padding:3px 8px; border-radius:6px; font-size:0.8em; font-weight:600; display:inline-block;"
+                elif conf >= 0.75:
+                    badge_style = "background:#78350f; color:#fbbf24; padding:3px 8px; border-radius:6px; font-size:0.8em; font-weight:600; display:inline-block;"
+                else:
+                    badge_style = "background:#7f1d1d; color:#fca5a5; padding:3px 8px; border-radius:6px; font-size:0.8em; font-weight:600; display:inline-block;"
+                
+                st.markdown(f'<div style="text-align: right;"><span style="{badge_style}">{conf:.1%}</span></div>', unsafe_allow_html=True)
+                st.markdown(f'<div style="text-align: right; font-size: 0.75rem; color: #64748b; margin-top: 2px;">Method: {method}</div>', unsafe_allow_html=True)
+                
+            st.markdown("<hr style='margin:4px 0; border-color:#1e293b;'>", unsafe_allow_html=True)
             
     # Downloads Section
     st.markdown("---")

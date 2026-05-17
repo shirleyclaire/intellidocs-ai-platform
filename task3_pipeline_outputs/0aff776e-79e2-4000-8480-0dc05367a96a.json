@@ -1,0 +1,42 @@
+{
+  "document_id": "0aff776e-79e2-4000-8480-0dc05367a96a",
+  "classification": {
+    "document_type": "PAN",
+    "fuzzy_match_score": 0.6451612903225806,
+    "regex_matched": false
+  },
+  "extraction": {
+    "PAN Number": {
+      "value": null,
+      "confidence": 0.0,
+      "method": "failed",
+      "flagged": true
+    },
+    "Full Name": {
+      "value": null,
+      "confidence": 0.0,
+      "method": "failed",
+      "flagged": true
+    },
+    "Father's Name": {
+      "value": null,
+      "confidence": 0.0,
+      "method": "failed",
+      "flagged": true
+    },
+    "Date of Birth": {
+      "value": null,
+      "confidence": 0.0,
+      "method": "failed",
+      "flagged": true
+    }
+  },
+  "document_flagged_for_human_review": true,
+  "flagging_rationale": [
+    "SYSTEM_FLAG (Extraction): The field 'PAN Number' requires manual review. Extracted confidence (0.00) is below the acceptable threshold of 0.75.",
+    "SYSTEM_FLAG (Extraction): The field 'Full Name' requires manual review. Extracted confidence (0.00) is below the acceptable threshold of 0.75.",
+    "SYSTEM_FLAG (Extraction): The field 'Father's Name' requires manual review. Extracted confidence (0.00) is below the acceptable threshold of 0.75.",
+    "SYSTEM_FLAG (Extraction): The field 'Date of Birth' requires manual review. Extracted confidence (0.00) is below the acceptable threshold of 0.75.",
+    "SYSTEM_FLAG (Classification): Unable to definitively verify document type. Mandatory regex signatures were missing or anchor confidence fell below threshold."
+  ]
+}

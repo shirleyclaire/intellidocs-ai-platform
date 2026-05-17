@@ -1,0 +1,13 @@
+{
+  "document_id": "cf43ce40-ca8f-4b64-8a0b-3b18e74b2bae",
+  "classification": {
+    "document_type": "",
+    "fuzzy_match_score": 0.0,
+    "regex_matched": false
+  },
+  "extraction": {},
+  "document_flagged_for_human_review": true,
+  "flagging_rationale": [
+    "SYSTEM_FLAG (Classification): Unable to definitively verify document type. Mandatory regex signatures were missing or anchor confidence fell below threshold."
+  ]
+}

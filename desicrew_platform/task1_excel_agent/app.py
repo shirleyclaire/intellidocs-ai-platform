@@ -53,7 +53,7 @@ if uploaded_file is not None:
         if df is not None:
             st.sidebar.success(f"File uploaded successfully! ({df.shape[0]} rows, {df.shape[1]} columns)")
 
-st.title("📊 Excel Data Agent")
+st.title("📊 Inventory Query Agent")
 
 # Main area
 if st.session_state['df'] is None:

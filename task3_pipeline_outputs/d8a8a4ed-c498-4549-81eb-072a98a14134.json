@@ -1,0 +1,36 @@
+{
+  "document_id": "d8a8a4ed-c498-4549-81eb-072a98a14134",
+  "classification": {
+    "document_type": "DrivingLicence",
+    "fuzzy_match_score": 1.0,
+    "regex_matched": true
+  },
+  "extraction": {
+    "DL Number": {
+      "value": "BR-2820020039384",
+      "confidence": 0.9675350189208984,
+      "method": "regex",
+      "flagged": false
+    },
+    "Name": {
+      "value": "PRAMODKR.CHAURASIA",
+      "confidence": 0.9391802638769149,
+      "method": "spatial",
+      "flagged": false
+    },
+    "Date of Issue": {
+      "value": "05-01-1974",
+      "confidence": 0.984787106513977,
+      "method": "regex",
+      "flagged": false
+    },
+    "Valid Till date": {
+      "value": "05-01-1974",
+      "confidence": 0.984787106513977,
+      "method": "regex",
+      "flagged": false
+    }
+  },
+  "document_flagged_for_human_review": false,
+  "flagging_rationale": []
+}

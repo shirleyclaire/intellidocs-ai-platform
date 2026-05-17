@@ -1,0 +1,38 @@
+{
+  "document_id": "06dd37e3-670e-4f36-a1e3-6a443a683ecb",
+  "classification": {
+    "document_type": "Passport",
+    "fuzzy_match_score": 1.0,
+    "regex_matched": true
+  },
+  "extraction": {
+    "Passport Number": {
+      "value": "K8016274",
+      "confidence": 0.9930605292320251,
+      "method": "regex",
+      "flagged": false
+    },
+    "Date of Birth": {
+      "value": "17/01/1997",
+      "confidence": 0.9904057383537292,
+      "method": "regex",
+      "flagged": false
+    },
+    "Date of Expiry": {
+      "value": "17/01/1997",
+      "confidence": 0.9904057383537292,
+      "method": "regex",
+      "flagged": false
+    },
+    "MRZ Line 2": {
+      "value": null,
+      "confidence": 0.0,
+      "method": "failed",
+      "flagged": true
+    }
+  },
+  "document_flagged_for_human_review": true,
+  "flagging_rationale": [
+    "SYSTEM_FLAG (Extraction): The field 'MRZ Line 2' requires manual review. Extracted confidence (0.00) is below the acceptable threshold of 0.75."
+  ]
+}
