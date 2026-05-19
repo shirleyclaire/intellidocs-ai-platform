@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from PIL import Image
 import numpy as np
-from paddleocr import PaddleOCR
 from typing import List
+import streamlit as st
 
 # Configurable constants at module level
 OCR_CONFIDENCE_FLOOR = 0.40
@@ -14,26 +14,29 @@ class OCRToken:
     confidence: float
     page: int
 
-# Initialise PaddleOCR once at module level (not inside the function)
+# Lazily initialize PaddleOCR using st.cache_resource
 # lang='en', det_model_dir=None, rec_model_dir=None to use default downloaded models.
 # Since PaddleOCR >= 3.0.0 removed the show_log parameter, we use a fallback block.
-try:
-    ocr_model = PaddleOCR(
-        use_angle_cls=True,
-        lang='en',
-        det_model_dir=None,
-        rec_model_dir=None,
-        enable_mkldnn=False,
-        show_log=False
-    )
-except (ValueError, TypeError):
-    ocr_model = PaddleOCR(
-        use_angle_cls=True,
-        lang='en',
-        det_model_dir=None,
-        rec_model_dir=None,
-        enable_mkldnn=False
-    )
+@st.cache_resource(show_spinner=False)
+def get_ocr_model():
+    from paddleocr import PaddleOCR
+    try:
+        return PaddleOCR(
+            use_angle_cls=True,
+            lang='en',
+            det_model_dir=None,
+            rec_model_dir=None,
+            enable_mkldnn=False,
+            show_log=False
+        )
+    except (ValueError, TypeError):
+        return PaddleOCR(
+            use_angle_cls=True,
+            lang='en',
+            det_model_dir=None,
+            rec_model_dir=None,
+            enable_mkldnn=False
+        )
 
 def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
     """
@@ -44,6 +47,7 @@ def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
     img_array = np.array(image.convert('RGB'))
 
     # 2. Call ocr.ocr(img_array, cls=True) with a fallback in case cls is not supported
+    ocr_model = get_ocr_model()
     try:
         result = ocr_model.ocr(img_array, cls=True)
 
