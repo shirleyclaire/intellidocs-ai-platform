@@ -116,6 +116,8 @@ if "flagging_report" not in st.session_state:
     st.session_state["flagging_report"] = {}
 if "pipeline_log" not in st.session_state:
     st.session_state["pipeline_log"] = []
+if "ocr_text" not in st.session_state:
+    st.session_state["ocr_text"] = ""
 
 # Title & Header Block
 st.title("🔍 Intelligent Document Processing (IDP) Pipeline")
@@ -150,6 +152,7 @@ if process_btn and uploaded_file:
     st.session_state["output_json"] = {}
     st.session_state["flagging_report"] = {}
     st.session_state["pipeline_log"] = []
+    st.session_state["ocr_text"] = ""
     
     log_message(f"Starting document pipeline processing for: '{uploaded_file.name}'")
     
@@ -173,6 +176,7 @@ if process_btn and uploaded_file:
             status.update(label="Stage 2: Extracting text layout...")
             log_message("Running PaddleOCR engine on preprocessed document to acquire layout coordinates.")
             tokens = run_ocr(processed_pil)
+            st.session_state["ocr_text"] = tokens_to_text(tokens)
             log_message(f"OCR Complete. Detected {len(tokens)} text coordinate tokens.")
             
             # Stage 3: Hybrid Classification
@@ -240,6 +244,10 @@ if st.session_state["pipeline_log"]:
     with st.expander("📝 Live Execution Logs", expanded=not st.session_state["pipeline_complete"]):
         for log in st.session_state["pipeline_log"]:
             st.code(log, language="bash")
+            
+        if st.session_state.get("ocr_text"):
+            if st.toggle("🔍 Show Raw OCR Extracted Text"):
+                st.text_area("OCR Output", st.session_state["ocr_text"], height=200)
 
 # Results Presentation Column Layout
 if st.session_state["pipeline_complete"]:

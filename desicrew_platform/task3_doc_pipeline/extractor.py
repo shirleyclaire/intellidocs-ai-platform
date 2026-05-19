@@ -92,7 +92,12 @@ def spatial_extract(
     best_score = 0.0
     
     for token in tokens:
-        score = fuzz.ratio(anchor_phrase.upper(), token.text.upper())
+        r_score = fuzz.ratio(anchor_phrase.upper(), token.text.upper())
+        p_score = fuzz.partial_ratio(anchor_phrase.upper(), token.text.upper())
+        # If the token is long and contains the anchor, partial_ratio will be high.
+        # We penalize partial_ratio slightly (e.g., -5) so exact matches still win if there's a tie.
+        score = max(r_score, p_score - 5 if len(token.text) > len(anchor_phrase) + 2 else 0)
+        
         if score >= 75 and score > best_score:
             best_score = score
             best_anchor = token
