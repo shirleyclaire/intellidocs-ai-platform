@@ -100,6 +100,26 @@ def spatial_extract(
     if not best_anchor:
         return None
         
+    # 1.5 Same-token extraction fallback
+    # If the OCR engine merged the key and value into one token (e.g. "FATHER'S NAME S/O KUMAR"),
+    # the anchor token text will be significantly longer than the anchor phrase.
+    if len(best_anchor.text) > len(anchor_phrase) + 3:
+        # Use regex to strip out the anchor phrase and any punctuation
+        pattern = re.compile(f"{re.escape(anchor_phrase)}['\\sA-Za-z]*:?[\\-\\s]*", re.IGNORECASE)
+        match = pattern.search(best_anchor.text)
+        if match:
+            remaining_text = best_anchor.text[match.end():].strip()
+            # Stop if we hit a slash or pipe which often separates next fields on the same line
+            remaining_text = re.split(r"[/|]", remaining_text)[0].strip()
+            if remaining_text and len(remaining_text) > 2:
+                return ExtractedField(
+                    field_name=field_name,
+                    value=remaining_text,
+                    method="spatial_same_token",
+                    ocr_confidence=float(best_anchor.confidence),
+                    extraction_confidence=0.0
+                )
+
     # Unpack anchor coordinates
     ax_min, ay_min, ax_max, ay_max = best_anchor.bbox
     

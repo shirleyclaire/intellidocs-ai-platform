@@ -101,7 +101,7 @@ def rescue_flagged_document(
         )
         
         # 4. Generate content
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
         response = model.generate_content(
             [prompt, image],
             generation_config={"response_mime_type": "application/json"}

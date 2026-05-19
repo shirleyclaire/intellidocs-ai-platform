@@ -34,11 +34,22 @@ if uploaded_file is not None:
         try:
             file_name = uploaded_file.name.lower()
             if file_name.endswith('.xlsx'):
-                df = pd.read_excel(uploaded_file, engine='openpyxl')
+                df_raw = pd.read_excel(uploaded_file, engine='openpyxl', header=None)
             elif file_name.endswith('.xls'):
-                df = pd.read_excel(uploaded_file, engine='xlrd')
+                df_raw = pd.read_excel(uploaded_file, engine='xlrd', header=None)
             else:
                 raise ValueError('Unsupported file type. Please upload an .xlsx or .xls file.')
+                
+            # Dynamic Header Detection: Find the row with the maximum non-null values
+            df_raw = df_raw.dropna(how='all', axis=0).dropna(how='all', axis=1)
+            if len(df_raw) > 0:
+                row_counts = df_raw.notna().sum(axis=1)
+                header_idx = row_counts.idxmax()
+                header_row = df_raw.loc[header_idx]
+                df_raw.columns = [str(col).strip() if pd.notna(col) else f"Unnamed_{i}" for i, col in enumerate(header_row)]
+                df = df_raw.loc[header_idx + 1:].reset_index(drop=True)
+            else:
+                df = df_raw
             st.session_state['df'] = df
             st.session_state['llm_provider'] = 'gemini'
             st.session_state['agent'] = build_agent(df, provider=st.session_state['llm_provider'])
