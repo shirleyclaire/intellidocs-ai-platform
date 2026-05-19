@@ -24,9 +24,27 @@ def format_output(
         is_flagged = field.extraction_confidence < FIELD_FLAG_THRESHOLD
         if is_flagged:
             any_field_flagged = True
+            
+            # Formulate highly specific rationale based on field state and method
+            if field.value is None or str(field.value).strip() == "":
+                if field.method == "regex":
+                    specific_reason = "No text in the document matched the strict formatting rules for this field."
+                elif field.method == "spatial":
+                    specific_reason = "The anchor was found, but no text was physically located adjacent to it."
+                else:
+                    specific_reason = "The extraction engine could not locate the anchor or value in the OCR output."
+            else:
+                if field.ocr_confidence < FIELD_FLAG_THRESHOLD:
+                    specific_reason = f"The value '{field.value}' was found, but the OCR engine struggled to read the text clearly (OCR Confidence: {field.ocr_confidence:.2f})."
+                elif field.method in ("spatial", "spatial_same_token"):
+                    specific_reason = f"The value '{field.value}' was found spatially, but inherent spatial reliability penalties dragged its confidence below the threshold."
+                else:
+                    specific_reason = f"The value '{field.value}' was found, but its score was penalized below the acceptable threshold."
+
             flagging_rationale.append(
                 f"SYSTEM_FLAG (Extraction): The field '{field.field_name}' requires manual review. "
-                f"Extracted confidence ({field.extraction_confidence:.2f}) is below the acceptable threshold of {FIELD_FLAG_THRESHOLD}."
+                f"Confidence ({field.extraction_confidence:.2f} < {FIELD_FLAG_THRESHOLD}). "
+                f"Reason: {specific_reason}"
             )
             
         extraction_details[field.field_name] = {

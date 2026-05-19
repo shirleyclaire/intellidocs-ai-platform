@@ -109,8 +109,8 @@ def spatial_extract(
     # If the OCR engine merged the key and value into one token (e.g. "FATHER'S NAME S/O KUMAR"),
     # the anchor token text will be significantly longer than the anchor phrase.
     if len(best_anchor.text) > len(anchor_phrase) + 3:
-        # Use regex to strip out the anchor phrase and any punctuation
-        pattern = re.compile(f"{re.escape(anchor_phrase)}['\\sA-Za-z]*:?[\\-\\s]*", re.IGNORECASE)
+        # Use regex to gently strip out the anchor phrase and any immediate punctuation (*, -, :, spaces)
+        pattern = re.compile(f"{re.escape(anchor_phrase)}[\\s\\*\\-:]*", re.IGNORECASE)
         match = pattern.search(best_anchor.text)
         if match:
             remaining_text = best_anchor.text[match.end():].strip()
@@ -216,7 +216,7 @@ def extract_fields(
         "PAN": [
             ("PAN Number", lambda t: regex_extract("PAN Number", regex_patterns.get("pan_number", ""), t)),
             ("Full Name", lambda t: spatial_extract("Full Name", "Name", t, direction="below", pixel_threshold=80)),
-            ("Father's Name", lambda t: spatial_extract("Father's Name", "Father", t, direction="below", pixel_threshold=80)),
+            ("Father's Name", lambda t: spatial_extract("Father's Name", "Father's Name", t, direction="below", pixel_threshold=80)),
             ("Date of Birth", lambda t: regex_extract("Date of Birth", regex_patterns.get("date_dmy", ""), t))
         ],
         "DrivingLicence": [
@@ -254,7 +254,7 @@ def extract_fields(
         "MoralHazard": [
             ("Application Number", lambda t: regex_extract("Application Number", regex_patterns.get("application_number", ""), t)),
             ("Name of Life Assured", lambda t: spatial_extract("Name of Life Assured", "Life Assured", t, direction="right", pixel_threshold=200)),
-            ("Nominee Relationship", lambda t: spatial_extract("Nominee Relationship", "Relationship", t, direction="right", pixel_threshold=150)),
+            ("Nominee Relationship", lambda t: spatial_extract("Nominee Relationship", "exact relationship** of nominee", t, direction="right", pixel_threshold=150)),
             ("Date", lambda t: regex_extract("Date", regex_patterns.get("date_dmy", ""), t)),
             ("Place", lambda t: spatial_extract("Place", "Place", t, direction="right", pixel_threshold=100))
         ],

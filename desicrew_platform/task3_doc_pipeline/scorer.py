@@ -17,7 +17,7 @@ def score_fields(fields: List[ExtractedField]) -> List[ExtractedField]:
             score = 0.0
         elif field.method == "regex":
             score = REGEX_BASE_SCORE * field.ocr_confidence
-        elif field.method == "spatial":
+        elif field.method in ("spatial", "spatial_same_token"):
             score = SPATIAL_BASE_SCORE * field.ocr_confidence
         else:
             # Keep existing confidence if it was already set (e.g. by fallback or other custom process)
