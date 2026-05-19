@@ -117,15 +117,15 @@ def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
                 page=page_number
             ))
 
-    return tokens
+    return sort_tokens(tokens)
 
-def tokens_to_text(tokens: List[OCRToken]) -> str:
+def sort_tokens(tokens: List[OCRToken]) -> List[OCRToken]:
     """
-    Concatenate all token texts in reading order (top-to-bottom, left-to-right).
-    Sort by y_min first, then x_min, with a y-grouping tolerance of 15 pixels.
+    Sort tokens in natural reading order (top-to-bottom, left-to-right)
+    using a line-grouping tolerance of 15 pixels.
     """
     if not tokens:
-        return ""
+        return []
 
     # Sort all tokens by y_min first
     sorted_tokens = sorted(tokens, key=lambda t: t.bbox[1])
@@ -143,11 +143,34 @@ def tokens_to_text(tokens: List[OCRToken]) -> str:
             current_line = [token]
     lines.append(current_line)
 
-    # Sort each line by x_min and join their texts
-    line_texts: List[str] = []
+    # Sort each line by x_min and flatten
+    final_tokens: List[OCRToken] = []
     for line in lines:
         sorted_line = sorted(line, key=lambda t: t.bbox[0])
-        line_text = " ".join(t.text for t in sorted_line)
-        line_texts.append(line_text)
+        final_tokens.extend(sorted_line)
 
-    return "\n".join(line_texts)
+    return final_tokens
+
+def tokens_to_text(tokens: List[OCRToken]) -> str:
+    """
+    Concatenate all token texts in reading order (top-to-bottom, left-to-right)
+    and format them into lines with newlines.
+    """
+    if not tokens:
+        return ""
+
+    # Group sorted tokens into lines based on y_min being within 15 pixels
+    lines: List[List[str]] = []
+    current_line: List[str] = [tokens[0].text]
+    prev_y = tokens[0].bbox[1]
+
+    for token in tokens[1:]:
+        if abs(token.bbox[1] - prev_y) <= 15:
+            current_line.append(token.text)
+        else:
+            lines.append(current_line)
+            current_line = [token.text]
+            prev_y = token.bbox[1]
+    lines.append(current_line)
+
+    return "\n".join(" ".join(words) for words in lines)

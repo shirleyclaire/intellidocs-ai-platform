@@ -239,8 +239,8 @@ def extract_fields(
             ("Frequency", lambda t: spatial_extract("Frequency", "Frequency", t, direction="right", pixel_threshold=100))
         ],
         "FATCA": [
-            ("Policy Number", lambda t: regex_extract("Policy Number", regex_patterns.get("application_number", ""), t)),
-            ("TIN / PAN", lambda t: regex_extract("TIN / PAN", regex_patterns.get("pan_number", ""), t)),
+            ("Policy Number", lambda t: spatial_extract("Policy Number", "Policy No", t, direction="right", pixel_threshold=150) or regex_extract("Policy Number", regex_patterns.get("application_number", ""), t)),
+            ("TIN / PAN", lambda t: regex_extract("TIN / PAN", regex_patterns.get("pan_number", ""), t) or regex_extract("TIN / PAN", r"\b[A-Z]{5}[0-9]{3}[A-Z0-9]{2}\b", t)),
             ("Father's Name", lambda t: spatial_extract("Father's Name", "Father", t, direction="right", pixel_threshold=150)),
             ("Place of Birth", lambda t: spatial_extract("Place of Birth", "Place of Birth", t, direction="right", pixel_threshold=150)),
             ("Nationality", lambda t: spatial_extract("Nationality", "Nationality", t, direction="right", pixel_threshold=100))
@@ -254,7 +254,7 @@ def extract_fields(
         "MoralHazard": [
             ("Application Number", lambda t: regex_extract("Application Number", regex_patterns.get("application_number", ""), t)),
             ("Name of Life Assured", lambda t: spatial_extract("Name of Life Assured", "Life Assured", t, direction="right", pixel_threshold=200)),
-            ("Nominee Relationship", lambda t: spatial_extract("Nominee Relationship", "exact relationship** of nominee", t, direction="right", pixel_threshold=150)),
+            ("Nominee Relationship", lambda t: spatial_extract("Nominee Relationship", "Relationship", t, direction="right", pixel_threshold=150)),
             ("Date", lambda t: regex_extract("Date", regex_patterns.get("date_dmy", ""), t)),
             ("Place", lambda t: spatial_extract("Place", "Place", t, direction="right", pixel_threshold=100))
         ],

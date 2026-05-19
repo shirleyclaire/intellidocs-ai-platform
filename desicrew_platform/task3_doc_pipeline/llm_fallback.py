@@ -4,7 +4,8 @@ import json
 import tomllib
 from typing import List
 from PIL import Image
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 from .extractor import ExtractedField
 from .scorer import FIELD_FLAG_THRESHOLD
@@ -48,7 +49,7 @@ def load_gemini_api_key() -> str:
             try:
                 with open(path, "rb") as f:
                     data = tomllib.load(f)
-                    key = data.get("gemini", {}).get("api_key")
+                    key = data.get("GEMINI_API_KEY") or data.get("gemini", {}).get("api_key")
                     if key:
                         return key.strip()
             except Exception as e:
@@ -89,7 +90,7 @@ def rescue_flagged_document(
         return fields
         
     try:
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
         
         # 3. Construct prompt
         missing_str = ", ".join(f"'{name}'" for name in missing_fields)
@@ -101,10 +102,12 @@ def rescue_flagged_document(
         )
         
         # 4. Generate content
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
-        response = model.generate_content(
-            [prompt, image],
-            generation_config={"response_mime_type": "application/json"}
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[prompt, image],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
         )
         
         # 5. Parse response

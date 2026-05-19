@@ -25,4 +25,4 @@ deskew
 python-dotenv
 torchvision
 rapidfuzz
-google-generativeai
+google-genai
