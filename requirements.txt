@@ -24,7 +24,6 @@ pdf2image
 Pillow
 deskew
 python-dotenv
-ddgs>=8.0.0
 torchvision
 rapidfuzz
 google-generativeai
