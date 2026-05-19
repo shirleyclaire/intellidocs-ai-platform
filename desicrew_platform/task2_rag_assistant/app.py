@@ -25,8 +25,9 @@ if "chain" not in st.session_state:
 if "last_question" not in st.session_state:
     st.session_state.last_question = None
 import tempfile
+import uuid
 if "persist_dir" not in st.session_state:
-    st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), "chroma_db"))
+    st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"chroma_db_{uuid.uuid4().hex}"))
 
 st.title("📄 Document Support Assistant")
 
@@ -40,18 +41,14 @@ uploaded_files = st.sidebar.file_uploader(
 
 if st.sidebar.button("Build Knowledge Base"):
     if uploaded_files:
-        # Reset st.session_state.chain and force garbage collection to release active SQLite locks on Windows
+        # Reset st.session_state.chain and force garbage collection
         st.session_state.chain = None
         import gc
         gc.collect()
         
-        # Clear out the persistence directory (Chroma DB) to prevent SQLite locks and document duplicates
-        persist_dir = st.session_state.persist_dir
-        if os.path.exists(persist_dir):
-            try:
-                shutil.rmtree(persist_dir)
-            except Exception as e:
-                print(f"Chroma connection clean warning: {e}")
+        # Generate a NEW unique persistence directory to entirely avoid SQLite read-only/lock errors
+        import uuid
+        st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"chroma_db_{uuid.uuid4().hex}"))
                 
         # Create docs directory
         docs_dir = "./task2_docs"
