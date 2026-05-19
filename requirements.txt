@@ -15,7 +15,6 @@ pypdf
 docx2txt
 pymupdf
 chromadb
-pytesseract
 paddleocr
 paddlepaddle
 # opencv-python
