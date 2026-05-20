@@ -123,3 +123,31 @@ streamlit run desicrew_platform/task2_rag_assistant/app.py
 ```bash
 streamlit run desicrew_platform/task3_doc_pipeline/app.py
 ```
+
+---
+
+## 🚢 Render Deployment
+
+Render should host this project as a single Streamlit web service. There is no separate API backend in this repo, so the public URL Render gives you will be the Streamlit UI itself.
+
+### Recommended setup
+1. Push this repository to GitHub.
+2. In Render, create a new Web Service from the repo.
+3. Use the Docker environment so the OCR and PDF dependencies can be installed reliably.
+4. Let Render build from the root `Dockerfile` and expose the app on the port provided by Render.
+5. Add your API keys in Render Environment Variables or Secrets.
+
+### What to open after deploy
+After deployment finishes, Render will give you one public service URL. That is the Streamlit app link. Open that link directly in the browser; there is no separate backend URL to copy from this codebase.
+
+### Required environment variables
+Set these in Render before deploying:
+- `GEMINI_API_KEY`
+- `OPENAI_API_KEY` if you want OpenAI-backed fallbacks or embeddings
+- `GROK_API_KEY` or `XAI_API_KEY` if you want the Grok fallback path
+
+### Local Docker run, if you want to test the same image
+```bash
+docker build -t intellidocs-streamlit .
+docker run -p 8501:8501 -e GEMINI_API_KEY=your_key intellidocs-streamlit
+```
