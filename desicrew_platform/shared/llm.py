@@ -4,8 +4,9 @@ import os
 from typing import Optional
 
 import streamlit as st
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
+
+# Force native gRPC DNS resolver to avoid hangs during imports/connections on some DNS setups (like Windows or Render)
+os.environ["GRPC_DNS_RESOLVER"] = "native"
 
 
 def _secret_or_env(*names: str) -> Optional[str]:
@@ -58,6 +59,7 @@ def get_llm(provider: str = "gemini"):
                 "[gemini]\napi_key = \"YOUR_KEY_HERE\""
             )
 
+        from langchain_google_genai import ChatGoogleGenerativeAI
         return ChatGoogleGenerativeAI(
             google_api_key=gemini_key,
             model="gemini-2.5-flash",
@@ -74,6 +76,7 @@ def get_llm(provider: str = "gemini"):
                 "[grok]\napi_key = \"YOUR_KEY_HERE\""
             )
 
+        from langchain_openai import ChatOpenAI
         return ChatOpenAI(
             openai_api_base="https://api.x.ai/v1",
             openai_api_key=grok_key,

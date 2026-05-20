@@ -1,4 +1,6 @@
 import os
+# Force native gRPC DNS resolver to avoid hangs during imports/connections on some DNS setups (like Windows or Render)
+os.environ["GRPC_DNS_RESOLVER"] = "native"
 import sys
 import runpy
 import streamlit as st
