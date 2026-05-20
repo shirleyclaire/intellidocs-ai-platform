@@ -9,6 +9,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
+    ffmpeg \
     poppler-utils \
     tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
@@ -18,6 +22,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-EXPOSE 8501
-
-CMD ["sh", "-c", "streamlit run desicrew_platform/main_hub.py --server.address 0.0.0.0 --server.port ${PORT:-8501} --server.headless true --browser.gatherUsageStats false"]
+CMD ["sh", "-c", "streamlit run desicrew_platform/main_hub.py --server.address 0.0.0.0 --server.port ${PORT:-10000} --server.headless true --browser.gatherUsageStats false"]
