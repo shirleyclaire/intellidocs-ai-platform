@@ -28,6 +28,8 @@ import tempfile
 import uuid
 if "persist_dir" not in st.session_state:
     st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"chroma_db_{uuid.uuid4().hex}"))
+if "docs_dir" not in st.session_state:
+    st.session_state.docs_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"task2_docs_{uuid.uuid4().hex}"))
 
 st.title("📄 Document Support Assistant")
 
@@ -46,12 +48,13 @@ if st.sidebar.button("Build Knowledge Base"):
         import gc
         gc.collect()
         
-        # Generate a NEW unique persistence directory to entirely avoid SQLite read-only/lock errors
+        # Generate a NEW unique persistence and documents directory to entirely avoid SQLite read-only/lock and file collisions
         import uuid
         st.session_state.persist_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"chroma_db_{uuid.uuid4().hex}"))
+        st.session_state.docs_dir = os.path.abspath(os.path.join(tempfile.gettempdir(), f"task2_docs_{uuid.uuid4().hex}"))
                 
-        # Create docs directory
-        docs_dir = "./task2_docs"
+        # Create isolated docs directory
+        docs_dir = st.session_state.docs_dir
         if os.path.exists(docs_dir):
             shutil.rmtree(docs_dir)
         os.makedirs(docs_dir)

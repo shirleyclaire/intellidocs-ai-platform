@@ -4,8 +4,8 @@ from PIL import Image
 from task3_doc_pipeline.ocr_engine import run_ocr, tokens_to_text, OCRToken
 
 class TestOCREngine(unittest.TestCase):
-    @patch('task3_doc_pipeline.ocr_engine.ocr_model')
-    def test_run_ocr_polygon_to_bbox(self, mock_ocr_model):
+    @patch('task3_doc_pipeline.ocr_engine.get_ocr_model')
+    def test_run_ocr_polygon_to_bbox(self, mock_get_ocr_model):
         """
         Unit test that mocks the PaddleOCR call and verifies the polygon-to-bbox
         conversion is correct for a known input polygon.
@@ -20,6 +20,8 @@ class TestOCREngine(unittest.TestCase):
         ]
         
         # Mock ocr_model.ocr to return our polygon with sample text and confidence
+        mock_ocr_model = MagicMock()
+        mock_get_ocr_model.return_value = mock_ocr_model
         mock_ocr_model.ocr.return_value = [
             [
                 [known_polygon, ("Hello World", 0.95)]

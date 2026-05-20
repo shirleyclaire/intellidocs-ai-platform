@@ -63,15 +63,15 @@ class TestExtractor(unittest.TestCase):
             OCRToken(text="ABCDE1234F", bbox=(10, 120, 110, 135), confidence=0.88, page=0)
         ]
         fields = extract_fields("PAN", tokens)
-        self.assertEqual(len(fields), 2)
+        self.assertEqual(len(fields), 4)
         
-        # Check pan_number
-        self.assertEqual(fields[0].field_name, "pan_number")
+        # Check PAN Number
+        self.assertEqual(fields[0].field_name, "PAN Number")
         self.assertEqual(fields[0].value, "ABCDE1234F")
         self.assertEqual(fields[0].method, "regex")
         
-        # Check full_name
-        self.assertEqual(fields[1].field_name, "full_name")
+        # Check Full Name
+        self.assertEqual(fields[1].field_name, "Full Name")
         self.assertEqual(fields[1].value, "ANIL KUMAR")
         self.assertEqual(fields[1].method, "spatial")
 
@@ -80,13 +80,13 @@ class TestExtractor(unittest.TestCase):
             OCRToken(text="Unrelated text", bbox=(0, 0, 10, 10), confidence=0.9, page=0)
         ]
         fields = extract_fields("PAN", tokens)
-        self.assertEqual(len(fields), 2)
+        self.assertEqual(len(fields), 4)
         
-        self.assertEqual(fields[0].field_name, "pan_number")
+        self.assertEqual(fields[0].field_name, "PAN Number")
         self.assertEqual(fields[0].value, None)
         self.assertEqual(fields[0].method, "failed")
         
-        self.assertEqual(fields[1].field_name, "full_name")
+        self.assertEqual(fields[1].field_name, "Full Name")
         self.assertEqual(fields[1].value, None)
         self.assertEqual(fields[1].method, "failed")
 

@@ -12,9 +12,5 @@ if workspace_root not in sys.path:
 # Monkeypatch st.set_page_config to avoid multi-page config crashes
 st.set_page_config = lambda *args, **kwargs: None
 
-# Switch directory so local assets resolve perfectly
 script_dir = os.path.join(workspace_root, "task3_doc_pipeline")
-os.chdir(script_dir)
-
-# Execute the app cleanly
-runpy.run_path(os.path.join(script_dir, "app.py"), init_globals=globals())
+runpy.run_path(os.path.join(script_dir, "app.py"), init_globals=globals(), run_name="__main__")

@@ -1,3 +1,10 @@
+import os
+# Configure OpenMP environment variables to prevent PaddleOCR crashes and limit core threading
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OMP_NUM_THREADS"] = "1"
+
+import threading
+_ocr_lock = threading.Lock()
 from dataclasses import dataclass
 from PIL import Image
 import numpy as np
@@ -49,10 +56,11 @@ def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:
     # 2. Call ocr.ocr(img_array, cls=True) with a fallback in case cls is not supported
     ocr_model = get_ocr_model()
     try:
-        result = ocr_model.ocr(img_array, cls=True)
-
+        with _ocr_lock:
+            result = ocr_model.ocr(img_array, cls=True)
     except TypeError:
-        result = ocr_model.ocr(img_array)
+        with _ocr_lock:
+            result = ocr_model.ocr(img_array)
 
 
     # 3. Process the results safely
@@ -159,12 +167,15 @@ def tokens_to_text(tokens: List[OCRToken]) -> str:
     if not tokens:
         return ""
 
+    # Sort tokens first to ensure correct reading order grouping
+    sorted_tokens = sort_tokens(tokens)
+
     # Group sorted tokens into lines based on y_min being within 15 pixels
     lines: List[List[str]] = []
-    current_line: List[str] = [tokens[0].text]
-    prev_y = tokens[0].bbox[1]
+    current_line: List[str] = [sorted_tokens[0].text]
+    prev_y = sorted_tokens[0].bbox[1]
 
-    for token in tokens[1:]:
+    for token in sorted_tokens[1:]:
         if abs(token.bbox[1] - prev_y) <= 15:
             current_line.append(token.text)
         else:

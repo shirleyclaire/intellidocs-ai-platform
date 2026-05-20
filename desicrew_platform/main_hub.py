@@ -1,3 +1,8 @@
+import os
+# Configure OpenMP environment variables to prevent PaddleOCR crashes and limit core threading
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import streamlit as st
 
 # Must be called immediately at the top of the hub script before any other rendering
