@@ -1,7 +1,11 @@
 import os
-# Configure OpenMP environment variables to prevent PaddleOCR crashes and limit core threading
+# Configure OpenMP/MKL/OpenBLAS environment variables to prevent PaddleOCR crashes and limit core threading
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 import threading
 _ocr_lock = threading.Lock()
@@ -34,7 +38,8 @@ def get_ocr_model():
             det_model_dir=None,
             rec_model_dir=None,
             enable_mkldnn=False,
-            show_log=False
+            show_log=False,
+            cpu_threads=1  # Limit CPU threads to 1 to prevent resource contention and deadlocks in Streamlit
         )
     except (ValueError, TypeError):
         return PaddleOCR(
@@ -42,7 +47,8 @@ def get_ocr_model():
             lang='en',
             det_model_dir=None,
             rec_model_dir=None,
-            enable_mkldnn=False
+            enable_mkldnn=False,
+            cpu_threads=1  # Limit CPU threads to 1 to prevent resource contention and deadlocks in Streamlit
         )
 
 def run_ocr(image: Image.Image, page_number: int = 0) -> List[OCRToken]:

@@ -1,9 +1,13 @@
 import os
 # Force native gRPC DNS resolver to avoid hangs during imports/connections on some DNS setups (like Windows or Render)
 os.environ["GRPC_DNS_RESOLVER"] = "native"
-# Configure OpenMP environment variables to prevent PaddleOCR crashes and limit core threading
+# Configure OpenMP/MKL/OpenBLAS environment variables to prevent PaddleOCR crashes and limit core threading
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 import streamlit as st
 

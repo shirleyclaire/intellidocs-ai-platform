@@ -60,11 +60,19 @@ def get_llm(provider: str = "gemini"):
             )
 
         from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            google_api_key=gemini_key,
-            model="gemini-2.5-flash",
-            temperature=0.0,
-        )
+        try:
+            return ChatGoogleGenerativeAI(
+                google_api_key=gemini_key,
+                model="gemini-2.5-flash",
+                temperature=0.0,
+                transport="rest"  # Explicitly force HTTP/REST to bypass any gRPC resolver/connection hangs entirely
+            )
+        except (TypeError, ValueError):
+            return ChatGoogleGenerativeAI(
+                google_api_key=gemini_key,
+                model="gemini-2.5-flash",
+                temperature=0.0,
+            )
 
     if provider == "grok":
         grok_key = _secret_or_env("GROK_API_KEY", "XAI_API_KEY")
